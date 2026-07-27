@@ -597,12 +597,20 @@ function handleMessage(message) {
       }
     }
     
+    var todayPrayersList = "";
+    var pList = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
+    for (var i = 0; i < pList.length; i++) {
+      var isP = (props.getProperty('PRAYED_' + pList[i]) === islamicDateStr);
+      todayPrayersList += pList[i] + ": " + (isP ? "✅" : "❌") + "\n";
+    }
+    
     var profile = "📋 **الملف العسكري (Camp Zero):**\n";
     profile += "الرتبة: " + rank + "\n";
     profile += "النقاط: " + p + " نقطة\n";
     profile += "أيام الصمود: " + days + " يوم\n";
     profile += "ستريك الصلوات الخمس: " + prayerStreak + " يوم متتالي 🕌\n";
     profile += "📈 التقدم للرتبة التالية:\n" + getNextRankProgress(p) + "\n\n";
+    profile += "**سجل صلوات اليوم:**\n" + todayPrayersList + "\n";
     profile += "**تفاصيل مدة الصمود:**\n" + details + "\n\n";
     profile += "الأوسمة: " + medals + "\n\n";
     profile += "💬 رسالة القيادة:\n" + msgText;
