@@ -3,10 +3,14 @@
 **Camp Zero** is a Telegram Bot built on Google Apps Script, designed to serve as a strict military-themed personal accountability system. The bot aims to build strong character, ensure commitment to the five daily prayers on time, break bad habits, and build positive ones through a system of points and military ranks.
 
 ## 🌟 Key Features
-- **🕰️ Smart Islamic Timing System:** The new day begins with the Fajr (Dawn) prayer call, not at midnight, ensuring accurate calculations for night owls.
-- **🕌 Dynamic Prayer Tracker:** Prayer buttons appear only when their time arrives and disappear once performed, maintaining a clean user interface.
+- **⏰ Smart Islamic Timing System:** The new day begins with the Fajr (Dawn) prayer call, not at midnight, ensuring accurate calculations for night owls.
+- **📱 Dynamic Prayer Tracker:** Prayer buttons appear only when their time arrives and disappear once performed, maintaining a clean user interface.
 - **🔥 Prayer Streak:** A smart counter that tracks consecutive days of completing all five daily prayers successfully, automatically resetting upon failure.
-- **🎖️ Ranks and Medals System:** Earn points by completing tasks and praying on time (early prayers grant 15 points, while delays gradually reduce points), and climb the ranks from "Lieutenant" to "Field Marshal".
+- **🛡️ Shield System:** Achieve a "Golden Day" (all 5 prayers on-time) 7 times in a row to earn a protective shield that nullifies relapse penalties (max 3 shields).
+- **🔄 Recovery Mode & Multipliers:** The first 7 days after a relapse grant you 2x points to encourage getting back on track, scaling up to 3x for legendary streaks!
+- **🏅 Ranks and Medals System:** Earn points by completing tasks and praying on time (early prayers grant 15 points, while delays gradually reduce points), and climb the ranks from "Lieutenant" to "Field Marshal".
+- **🃏 Weekly Joker Challenge:** Random surprise inspections may trigger a Joker challenge, offering massive points and hidden medals.
+- **🌅 Fajr & Friday Bonuses:** Detailed tracking for praying Fajr right on-time to unlock hidden bronze/silver/gold medals, and 2x point multipliers on Fridays.
 - **📉 Wall of Shame:** Accurately track your relapses to understand when and how you fell, helping you avoid repeating the same mistakes.
 - **🏆 Victory Vault:** Log your small moral victories daily (max 3 rewards per day) and draw energy from them during moments of weakness.
 - **🚨 Surprise Inspections & Penalties:** Random military inspections for delayed tasks, and a 20-point deduction if a prayer time entirely passes and becomes "Qadaa".
@@ -54,22 +58,12 @@ The project requires no traditional servers; it is hosted entirely and for free 
 6. Paste the copied URL into the `SCRIPT_URL` variable at the top of the code.
 7. ⚠️ **CRITICAL:** After modifying the URL, you MUST deploy again via: **Manage deployments** ⬅️ Edit (Pencil icon) ⬅️ From the Version dropdown select **New version** ⬅️ Then Deploy.
 
-### Step 5: Activate the Webhook
-1. In Apps Script, find the function named `setWebhook` from the top dropdown menu.
+### Step 5: Automated Bot Setup
+1. In Apps Script, find the function named `setupBot` from the top dropdown menu (next to the Run button).
 2. Click **Run**.
-3. You should see `{"ok": true}` in the Execution log. Your Telegram bot is now successfully linked to the code!
+3. This single command will automatically link your Telegram Webhook and create all the necessary 5-minute background triggers. You should see a success message in the Execution log.
 
-### Step 6: Enable Periodic Reminders (Time-driven Triggers)
-1. In the left sidebar of Apps Script, click the **Triggers** icon (alarm clock ⏰).
-2. Click **Add Trigger** at the bottom.
-3. Settings:
-   - **Choose which function to run:** Select `checkAndRemind`.
-   - **Select event source:** Select `Time-driven`.
-   - **Select type of time based trigger:** Select `Minutes timer`.
-   - **Select minute interval:** Select `Every 5 minutes`.
-4. Click Save.
-
-🎉 **Done!** Now go to your bot on Telegram, type `/start`, and begin your camp.
+✅ **Done!** Now go to your bot on Telegram, type `/start`, and begin your camp.
 
 ---
 > "Lust is a moment, and regret is years. Victory is a moment, and pride is years." 🦅
