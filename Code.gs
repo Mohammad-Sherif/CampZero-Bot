@@ -250,6 +250,7 @@ function updatePrayerStreak(islamicDateStr, props, chatId) {
       
       sendMessage(chatId, msg);
       checkHiddenAchievements(props, chatId, p);
+    }
   }
 }
 
@@ -1359,5 +1360,4 @@ function checkAndRemind() {
   } finally {
     lock.releaseLock();
   }
-}
 }
