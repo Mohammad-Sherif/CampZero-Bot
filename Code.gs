@@ -194,15 +194,21 @@ function getPrayerPoints(actualPrayer, currentAbs, prayerTimes, isExcused, misse
 
 function updatePrayerStreak(islamicDateStr, props, chatId) {
   var prayersList = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
-  var allPrayed = true;
+  var isPerfectDay = true;
+  
   for (var i = 0; i < prayersList.length; i++) {
     if (props.getProperty('PRAYED_' + prayersList[i]) !== islamicDateStr) {
-      allPrayed = false;
+      isPerfectDay = false;
+      break;
+    }
+    var pts = parseInt(props.getProperty('PRAYER_PTS_' + prayersList[i] + '_' + islamicDateStr) || "0");
+    if (pts < 7) { // Qadaa or very late (2 or 5 points) breaks the Perfect Day
+      isPerfectDay = false;
       break;
     }
   }
   
-  if (allPrayed) {
+  if (isPerfectDay) {
     var lastComplete = props.getProperty('PRAYER_STREAK_LAST');
     if (lastComplete !== islamicDateStr) {
       var streak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
@@ -230,13 +236,13 @@ function updatePrayerStreak(islamicDateStr, props, chatId) {
       
       var msg = "🌟 **يوم ذهبي مكتمل!** لقد أكملت جميع الصلوات الخمس لليوم. ستريك الصلوات الحالي: *" + streak + "* يوم متتالي 🦅";
       
-      // نظام الدروع (Shields) - درع لكل 3 أيام صلوات متتالية
-      if (streak % 3 === 0) {
+      // نظام الدروع (Shields) - درع لكل 7 أيام صلوات متتالية (يوم ذهبي)
+      if (streak % 7 === 0) {
         var shields = parseInt(props.getProperty('SHIELDS') || "0");
         if (shields < 3) {
           shields++;
           props.setProperty('SHIELDS', shields.toString());
-          msg += "\n\n🛡️ **حصلت على درع حماية!** لالتزامك 3 أيام متتالية بالصلوات الخمس. الدروع الحالية: " + shields + "/3.";
+          msg += "\n\n🛡️ **حصلت على درع حماية!** لالتزامك 7 أيام متتالية بالصلوات الخمس. الدروع الحالية: " + shields + "/3.";
         } else {
           msg += "\n\n🛡️ حافظت على التزامك، وحقيبة دروعك ممتلئة للحد الأقصى (3/3). أنت جاهز لأي طوارئ!";
         }
@@ -461,6 +467,9 @@ function handleMessage(message) {
       
       var missedArr = getMissedPrayers(currentAbs, prayerTimes, props, islamicDateStr, fajrMins);
       var earnedPoints = getPrayerPoints(actualPrayer, currentAbs, prayerTimes, isEmergency, missedArr, fajrMins);
+      
+      // Save prayer points for Perfect Day calculation
+      props.setProperty('PRAYER_PTS_' + actualPrayer + '_' + islamicDateStr, earnedPoints.toString());
       
       // Update stats
       var isMissed = (missedArr.indexOf(actualPrayer) !== -1);
