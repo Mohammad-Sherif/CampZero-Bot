@@ -566,7 +566,18 @@ function handleMessage(message) {
     var msgText = getStreakMessage(days);
     var rank = getRank(p);
     var medals = getMedals();
-    var prayerStreak = props.getProperty('PRAYER_STREAK') || "0";
+    
+    var prayerStreak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
+    var lastComplete = props.getProperty('PRAYER_STREAK_LAST');
+    if (lastComplete && prayerStreak > 0) {
+      var now = new Date();
+      var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      var yesterdayStr = Utilities.formatDate(yesterday, "GMT+3", "yyyy-MM-dd");
+      if (lastComplete !== islamicDateStr && lastComplete !== yesterdayStr) {
+        prayerStreak = 0;
+        props.setProperty('PRAYER_STREAK', "0");
+      }
+    }
     
     var profile = "📋 **الملف العسكري (Camp Zero):**\n";
     profile += "الرتبة: " + rank + "\n";
