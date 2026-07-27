@@ -575,6 +575,14 @@ function handleMessage(message) {
     var days = getStreakDays();
     var msgText = getStreakMessage(days);
     var rank = getRank(p);
+    
+    if (days >= 1) addMedal("شارة المحارب الأولى 🎖️", chatId);
+    if (days >= 3) addMedal("وسام الإرادة الصلبة 🛡️", chatId);
+    if (days >= 7) addMedal("نجمة الأسبوع النحاسية 🥉", chatId);
+    if (days >= 30) addMedal("درع الشهر الفضي 🥈", chatId);
+    if (days >= 90) addMedal("تاج الصمود الذهبي 🥇", chatId);
+    if (days >= 180) addMedal("وسام النقاء المطلق 💎", chatId);
+    
     var medals = getMedals();
     
     var prayerStreak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
