@@ -1226,7 +1226,7 @@ function checkAndRemind() {
     randomTarget = parseInt(randomTarget);
   }
   
-  if (currentAbs >= randomTarget) {
+  if (currentAbs >= randomTarget && !isEmergency) {
     var dailyKey = 'DAILY_CHECKIN_' + islamicDateStr;
     if (!props.getProperty(dailyKey)) {
       props.setProperty(dailyKey, "true");
