@@ -69,10 +69,25 @@ function addMedal(medal, chatId) {
 // ---------------------------
 // Webhook & Setup
 // ---------------------------
-function setWebhook() {
+function setupBot() {
+  // 1. Set Webhook
   var url = "https://api.telegram.org/bot" + BOT_TOKEN + "/setWebhook?url=" + SCRIPT_URL;
   var response = UrlFetchApp.fetch(url);
-  Logger.log(response.getContentText());
+  Logger.log("Webhook Response: " + response.getContentText());
+  
+  // 2. Clear old triggers to avoid duplicates
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    ScriptApp.deleteTrigger(triggers[i]);
+  }
+  
+  // 3. Create new trigger for checkAndRemind every 5 minutes
+  ScriptApp.newTrigger("checkAndRemind")
+           .timeBased()
+           .everyMinutes(5)
+           .create();
+           
+  Logger.log("✅ تم إعداد البوت بنجاح: تم ربط الـ Webhook وإنشاء الـ Triggers.");
 }
 
 function doPost(e) {
@@ -152,7 +167,7 @@ function getPrayerPoints(actualPrayer, currentAbs, prayerTimes, isExcused, misse
   if (isExcused) return 15;
   
   var isMissed = (missedArr.indexOf(actualPrayer) !== -1);
-  if (isMissed) return 5;
+  if (isMissed) return 2;
   
   var prayers = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
   var index = prayers.indexOf(actualPrayer);
@@ -163,17 +178,18 @@ function getPrayerPoints(actualPrayer, currentAbs, prayerTimes, isExcused, misse
   } else if (index >= 1 && index < 4) {
     var nextPName = prayers[index + 1];
     nextAbs = getAbsoluteMins(parseTimeStr(prayerTimes[nextPName]), fajrMins);
+  } else {
+    nextAbs = fajrMins + 1440;
   }
   
-  if (nextAbs) {
-    var diff = nextAbs - currentAbs;
-    if (diff > 30) return 15;
-    if (diff > 15) return 10;
-    if (diff > 5) return 5;
-    return 2;
-  } else {
-    return 15; 
-  }
+  var timeRemaining = nextAbs - currentAbs;
+  
+  if (timeRemaining > 60) return 15;
+  if (timeRemaining > 45) return 12;
+  if (timeRemaining > 30) return 9;
+  if (timeRemaining > 15) return 7;
+  if (timeRemaining > 0)  return 5;
+  return 2;
 }
 
 function updatePrayerStreak(islamicDateStr, props, chatId) {
@@ -212,7 +228,37 @@ function updatePrayerStreak(islamicDateStr, props, chatId) {
       if (streak === 7) addMedal("نجمة الفجر 🌟", chatId);
       if (streak === 30) addMedal("درع المصلين الأسطوري 🕋", chatId);
       
-      sendMessage(chatId, "🌟 **إنجاز عظيم!** لقد أكملت جميع الصلوات الخمس لليوم. ستريك الصلوات الحالي: *" + streak + "* يوم متتالي 🦅");
+      var msg = "🌟 **يوم ذهبي مكتمل!** لقد أكملت جميع الصلوات الخمس لليوم. ستريك الصلوات الحالي: *" + streak + "* يوم متتالي 🦅";
+      
+      // نظام الدروع (Shields) - درع لكل 3 أيام صلوات متتالية
+      if (streak % 3 === 0) {
+        var shields = parseInt(props.getProperty('SHIELDS') || "0");
+        if (shields < 3) {
+          shields++;
+          props.setProperty('SHIELDS', shields.toString());
+          msg += "\n\n🛡️ **حصلت على درع حماية!** لالتزامك 3 أيام متتالية بالصلوات الخمس. الدروع الحالية: " + shields + "/3.";
+        } else {
+          msg += "\n\n🛡️ حافظت على التزامك، وحقيبة دروعك ممتلئة للحد الأقصى (3/3). أنت جاهز لأي طوارئ!";
+        }
+      }
+      
+      sendMessage(chatId, msg);
+      checkHiddenAchievements(props, chatId, p);
+  }
+}
+
+function checkHiddenAchievements(props, chatId, p) {
+  // الضربة الخماسية: لو الستريك = 5 أيام متتالية
+  var streak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
+  if (streak === 5) {
+    addMedal("🖐️ الضربة الخماسية", chatId);
+  }
+  // المليونير: أول ما النقاط تتخطى 5000
+  if (p >= 5000) {
+    var hasMedal = props.getProperty('MEDAL_MILLIONAIRE');
+    if (!hasMedal) {
+      addMedal("💰 مليونير الحسنات", chatId);
+      props.setProperty('MEDAL_MILLIONAIRE', "true");
     }
   }
 }
@@ -226,7 +272,7 @@ function handleMessage(message) {
   var props = PropertiesService.getScriptProperties();
   
   if (!text) {
-    sendMessage(chatId, "القيادة بتستقبل النصوص فقط 🎖️");
+    sendMenu(chatId, "القيادة بتستقبل النصوص والأوامر فقط 🎖️", getKeyboard(getPoints()));
     return;
   }
   
@@ -250,28 +296,37 @@ function handleMessage(message) {
   var isEmergency = (props.getProperty('EMERGENCY_MODE') === "true");
   
   if (text === "/start") {
-    sendMenu(chatId, "أهلاً بك في Camp Zero. تم تفعيل نظام التجنيد والمهام السرية. ⚔️", getKeyboard(p));
+    sendMenu(chatId, "أهلاً بك في Camp Zero. تم تفعيل نظام المحاسبة العسكرية الصارم. ⚔️", getKeyboard(p));
     return;
   }
   
   if (text === "/help") {
-    var helpMsg = "🛠️ **قائمة مساعدة Camp Zero:**\n\n";
-    helpMsg += "🔹 **الأوامر السرية:**\n";
-    helpMsg += "`/fix` : مسح الذاكرة المؤقتة للصلوات (استخدمه لو حصل خطأ تقني في الزراير)\n";
-    helpMsg += "`/apology` : تعويض تقني من القيادة (يُستخدم مرة واحدة فقط)\n";
-    helpMsg += "`/call @username` : إرسال مكالمة استدعاء صوتية عبر CallMeBot\n";
-    helpMsg += "`/mystats` : تقرير إحصائي تفصيلي لأدائك الشامل\n";
-    helpMsg += "`/help` : عرض هذه القائمة\n\n";
-    helpMsg += "🔹 **أزرار الكيبورد:**\n";
-    helpMsg += "🦍 **ملف الوحش:** بيعرض رتبتك، نقطك، أيام الصمود، وستريك الصلوات.\n";
-    helpMsg += "⚔️ **العودة للقتال:** لو حصل انتكاسة، بتدوس هنا وتحدد الوقت عشان تصفر العداد.\n";
-    helpMsg += "🛡️ **إذن طوارئ:** لو مسافر، فعّله عشان يوقف العقوبات.\n";
-    helpMsg += "📉 **سجل السقوط:** بيحتفظ بتواريخ انتكاساتك عشان تتعلم منها.\n";
-    helpMsg += "🏆 **خزينة الانتصارات:** سجل انتصاراتك المعنوية.\n";
-    helpMsg += "📅 **عملية الأسبوع:** عملية بتتغير كل أسبوع بـ 200 نقطة.\n";
-    helpMsg += "🎯 **مهمة خاصة:** مهمة دينية سريعة بـ 50 نقطة.\n";
-    helpMsg += "📦 **صندوق الدعم:** بـ 100 نقطة بيطلعلك نصيحة أو وسام نادر.\n";
-    sendMenu(chatId, helpMsg, getKeyboard(p));
+    var helpText = "⚔️ *أوامر Camp Zero السرية:*\n\n" +
+      "/start — تفعيل البوت وعرض القائمة\n" +
+      "/fix — مسح cache الصلوات في حالة أي بق\n" +
+      "/apology — تعويض تقني (مرة واحدة فقط)\n" +
+      "/call @username — بعت اتصال صوتي عبر CallMeBot\n" +
+      "/mystats — إحصائيات تفصيلية\n" +
+      "/help — هذه القائمة\n\n" +
+      "💡 ملاحظة: بعض الأزرار بتظهر بس لو وصلت حد نقاط معين.";
+    sendMessage(chatId, helpText);
+    return;
+  }
+
+  if (text === "تم إنجاز العملية الأسبوعية ✅") {
+    var opStatus = props.getProperty('WEEKLY_OP_STATUS');
+    if (opStatus === "DONE") {
+      sendMessage(chatId, "إنجزت عملية الأسبوع من قبل يا بطل! استعد للأسبوع القادم 🦅");
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
+    } else if (opStatus === "PENDING") {
+      props.setProperty('WEEKLY_OP_STATUS', "DONE");
+      var newP = addPoints(200);
+      addMedal("🎖️ وسام العملية الأسبوعية", chatId);
+      sendMessage(chatId, "عاش يا أسطورة! 200 نقطة ووسام العملية الأسبوعية ✅\nرصيدك: " + newP);
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
+    } else {
+      sendMenu(chatId, "مفيش عملية نشطة دلوقتي.", getKeyboard(p));
+    }
     return;
   }
   
@@ -290,6 +345,9 @@ function handleMessage(message) {
     if (shame) fCount = JSON.parse(shame).length;
     
     var maxStreak = props.getProperty('MAX_PRAYER_STREAK') || "0";
+    var pb = props.getProperty('PERSONAL_BEST_STREAK') || "0";
+    var shields = props.getProperty('SHIELDS') || "0";
+    var fajrCount = props.getProperty('FAJR_ONTIME_COUNT') || "0";
     
     var stats = "📊 **التقرير الإحصائي (My Stats):**\n\n";
     stats += "✅ صلوات في وقتها (هذا الأسبوع): " + onTime + "\n";
@@ -298,6 +356,9 @@ function handleMessage(message) {
     stats += "🏆 إجمالي الانتصارات المسجلة: " + vCount + "\n";
     stats += "📉 إجمالي السقطات في سجل الخزي: " + fCount + "\n";
     stats += "🔥 أطول ستريك صلوات متتالية: " + maxStreak + " يوم\n";
+    stats += "👑 أعلى صمود (PB): " + pb + " يوم\n";
+    stats += "🛡️ الدروع المتاحة: " + shields + "/3\n";
+    stats += "🌅 مرات الفجر في وقته: " + fajrCount + " مرة\n";
     stats += "💎 إجمالي النقاط الحالي: " + p + " نقطة\n";
     
     sendMenu(chatId, stats, getKeyboard(p));
@@ -411,22 +472,46 @@ function handleMessage(message) {
         props.setProperty('WEEKLY_ON_TIME_COUNT', (oCount + 1).toString());
       }
       
-      var newP = addPoints(earnedPoints);
+      var currentDayOfWeek = Utilities.formatDate(new Date(), "GMT+3", "u");
+      var isFridayBonus = (currentDayOfWeek === "5" && earnedPoints >= 12);
+      
+      var multiplier = getStreakMultiplier();
+      var finalPoints = Math.round(earnedPoints * multiplier);
+      if (isFridayBonus) finalPoints *= 2;
+      
+      var newP = addPoints(finalPoints);
+      
+      if (actualPrayer === "الفجر" && earnedPoints === 15 && !isEmergency) {
+        var fCount = parseInt(props.getProperty('FAJR_ONTIME_COUNT') || "0");
+        fCount++;
+        props.setProperty('FAJR_ONTIME_COUNT', fCount.toString());
+        if (fCount === 3) addMedal("🥉 حارس الفجر البرونزي", chatId);
+        if (fCount === 10) addMedal("🥈 حارس الفجر الفضي", chatId);
+        if (fCount === 30) addMedal("🥇 حارس الفجر الذهبي", chatId);
+        if (fCount === 90) addMedal("🌌 أسطورة الفجر", chatId);
+      }
       
       var extraMsg = "";
       if (isEmergency) {
         extraMsg = " (النقاط كاملة لوجود عذر 🛡️)";
       } else if (earnedPoints === 15) {
         extraMsg = " (عاش أبطال التبكير 🔥)";
-      } else if (earnedPoints === 10) {
+      } else if (earnedPoints >= 12) {
         extraMsg = " (حاول تبدر المرة الجاية ⚡)";
-      } else if (earnedPoints === 5) {
+      } else if (earnedPoints >= 7) {
         extraMsg = " (لحقت نفسك بأعجوبة ⏳)";
-      } else if (earnedPoints === 2) {
+      } else {
         extraMsg = " (التأخير ده خطر جداً ⚠️)";
       }
       
-      sendMessage(chatId, "تم إنجاز صلاة " + text + " بنجاح 🦅! تم إضافة " + earnedPoints + " نقطة " + extraMsg + "\nرصيدك الحالي: " + newP);
+      if (multiplier > 1.0) {
+        extraMsg += " (" + getMultiplierLabel() + ")";
+      }
+      if (isFridayBonus) {
+        extraMsg += " (✨ بونص الجمعة ×2)";
+      }
+      
+      sendMessage(chatId, "تم إنجاز صلاة " + text + " بنجاح 🦅! تم إضافة " + finalPoints + " نقطة " + extraMsg + "\nرصيدك الحالي: " + newP);
       updatePrayerStreak(islamicDateStr, props, chatId);
       sendMenu(chatId, "استعد للي بعدها. الزرار بتاعها هيختفي عشان الكيبورد يفضل رايق.", getKeyboard(newP));
     } else {
@@ -510,6 +595,26 @@ function handleMessage(message) {
   else if (text === "إلغاء ❌") {
     props.setProperty('AWAITING_VICTORY', "false");
     sendMenu(chatId, "تم الإلغاء.", getKeyboard(p));
+  }
+  else if (text === "قبول تحدي الجوكر 🃏") {
+    if (props.getProperty('JOKER_ACTIVE') === "true") {
+      props.setProperty('JOKER_ACTIVE', "false");
+      var newP = addPoints(150);
+      addMedal("🃏 وسام الجوكر الخفي", chatId);
+      sendMessage(chatId, "🔥 **أنت حقاً وحش!** تم قبول التحدي بنجاح.\nحصلت على 150 نقطة ووسام الجوكر الخفي! 🃏\nرصيدك الحالي: " + newP);
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
+    } else {
+      sendMenu(chatId, "عفواً، التحدي غير متاح الآن.", getKeyboard(p));
+    }
+  }
+  else if (text === "تجاهل ❌") {
+    if (props.getProperty('JOKER_ACTIVE') === "true") {
+      props.setProperty('JOKER_ACTIVE', "false");
+      sendMessage(chatId, "تم رفض التحدي. الفرص الكبيرة لا تأتي دائماً يا بطل.");
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
+    } else {
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
+    }
   }
   else if (text === "استمد طاقة 🔥") {
     var vault = props.getProperty('VICTORY_VAULT');
@@ -604,10 +709,20 @@ function handleMessage(message) {
       todayPrayersList += pList[i] + ": " + (isP ? "✅" : "❌") + "\n";
     }
     
+    var personalBest = parseInt(props.getProperty('PERSONAL_BEST_STREAK') || "0");
+    var pbText = "";
+    if (personalBest > 0) {
+      var pct = Math.floor((days / personalBest) * 100);
+      if (pct > 100) pct = 100;
+      pbText = "أعلى صمود (PB): " + personalBest + " يوم (" + pct + "% من هدفك الشخصي)\n";
+    }
+    
     var profile = "📋 **الملف العسكري (Camp Zero):**\n";
     profile += "الرتبة: " + rank + "\n";
     profile += "النقاط: " + p + " نقطة\n";
     profile += "أيام الصمود: " + days + " يوم\n";
+    profile += pbText;
+    profile += "مضاعف الصمود: " + getMultiplierLabel() + "\n";
     profile += "ستريك الصلوات الخمس: " + prayerStreak + " يوم متتالي 🕌\n";
     profile += "📈 التقدم للرتبة التالية:\n" + getNextRankProgress(p) + "\n\n";
     profile += "**سجل صلوات اليوم:**\n" + todayPrayersList + "\n";
@@ -650,18 +765,35 @@ function handleMessage(message) {
     var relapseTime = new Date().getTime() - offset;
     var relapseDateStr = Utilities.formatDate(new Date(relapseTime), "GMT+3", "yyyy-MM-dd HH:mm:ss");
     
-    var shame = props.getProperty('WALL_OF_SHAME');
-    if (!shame) shame = "[]";
-    var shameArr = JSON.parse(shame);
-    shameArr.push(relapseDateStr);
-    if (shameArr.length > 50) shameArr.shift(); 
-    props.setProperty('WALL_OF_SHAME', JSON.stringify(shameArr));
-    
-    props.setProperty('LAST_RESET_DATE', relapseTime.toString());
-    props.setProperty('POINTS', "0");
-    
-    sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺");
-    sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(0));
+    var shields = parseInt(props.getProperty('SHIELDS') || "0");
+    if (shields > 0) {
+      props.setProperty('SHIELDS', (shields - 1).toString());
+      props.setProperty('SHIELD_ACTIVE', "true");
+      
+      var shame = props.getProperty('WALL_OF_SHAME');
+      if (!shame) shame = "[]";
+      var shameArr = JSON.parse(shame);
+      shameArr.push(relapseDateStr + " (محمي بالدرع 🛡️)");
+      if (shameArr.length > 50) shameArr.shift(); 
+      props.setProperty('WALL_OF_SHAME', JSON.stringify(shameArr));
+      
+      sendMessage(chatId, "🛡️ تفعيل درع الحماية! 🛡️\n\nالدرع اتكسرت وامتصت الضربة. الستريك والنقاط بتاعتك في أمان تام.\nعندك حماية إضافية من خصم التفتيش لأول 3 أيام.\nمتبقي لك دروع: " + (shields - 1));
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(getPoints()));
+    } else {
+      var shame = props.getProperty('WALL_OF_SHAME');
+      if (!shame) shame = "[]";
+      var shameArr = JSON.parse(shame);
+      shameArr.push(relapseDateStr);
+      if (shameArr.length > 50) shameArr.shift(); 
+      props.setProperty('WALL_OF_SHAME', JSON.stringify(shameArr));
+      
+      props.setProperty('LAST_RESET_DATE', relapseTime.toString());
+      props.setProperty('POINTS', "0");
+      props.setProperty('SHIELD_ACTIVE', "false");
+      
+      sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺\nأنت الآن في فترة الاستعادة (7 أيام) بدون حماية.");
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(0));
+    }
   }
   else if (text === "تراجع ❌" || text === "رجوع ⬅️") {
     sendMenu(chatId, "القائمة الرئيسية 👇", getKeyboard(p));
@@ -808,6 +940,27 @@ function getStreakDays() {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
+function getStreakMultiplier() {
+  var days = getStreakDays();
+  if (days < 7) return 2.0;     // 🔥 وضع الاستعادة (تشجيع)
+  if (days >= 90) return 3.0;   // 🌌 أسطوري
+  if (days >= 60) return 2.5;   // 💎 محترف
+  if (days >= 30) return 2.0;   // 🏆 متقدم
+  if (days >= 14) return 1.5;   // 🔥 جيد
+  return 1.0;                   // عادي
+}
+
+function getMultiplierLabel() {
+  var days = getStreakDays();
+  var m = getStreakMultiplier();
+  if (days < 7) return "🔥 وضع الاستعادة (×2)";
+  if (m >= 3.0) return "🌌 أسطوري (×3)";
+  if (m >= 2.5) return "💎 محترف (×2.5)";
+  if (m >= 2.0) return "🏆 متقدم (×2)";
+  if (m >= 1.5) return "🔥 في طريقك (×1.5)";
+  return "⚔️ ابدأ (×1)";
+}
+
 function resetStreak() {
   var props = PropertiesService.getScriptProperties();
   props.setProperty('LAST_RESET_DATE', new Date().getTime().toString());
@@ -924,10 +1077,13 @@ function checkAndSendReminder(type, prayer, date, chatId, msg) {
 }
 
 function checkAndRemind() {
-  var props = PropertiesService.getScriptProperties();
-  var chatId = props.getProperty('ADMIN_CHAT_ID');
-  if (!chatId) chatId = props.getProperty('CHAT_ID'); 
-  if (!chatId) return; 
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000);
+    var props = PropertiesService.getScriptProperties();
+    var chatId = props.getProperty('ADMIN_CHAT_ID');
+    if (!chatId) chatId = props.getProperty('CHAT_ID'); 
+    if (!chatId) return; 
   
   var now = new Date();
   var currentTimeStr = Utilities.formatDate(now, "GMT+3", "HH:mm");
@@ -1064,17 +1220,134 @@ function checkAndRemind() {
   if (currentAbs >= randomTarget) {
     var dailyKey = 'DAILY_CHECKIN_' + islamicDateStr;
     if (!props.getProperty(dailyKey)) {
-      var days = getStreakDays();
-      var newP = addPoints(50);
-      sendMessage(chatId, "فحص مفاجئ من القيادة 🚨: تقرير الأداء بيقول إنك صامد بقالك " + days + " يوم. تم إضافة 50 نقطة مكافأة الصمود! رصيدك: " + newP);
       props.setProperty(dailyKey, "true");
       
-      if (days >= 1) addMedal("شارة المحارب الأولى 🎖️", chatId);
-      if (days >= 3) addMedal("وسام الإرادة الصلبة 🛡️", chatId);
-      if (days >= 7) addMedal("نجمة الأسبوع النحاسية 🥉", chatId);
+      var days = getStreakDays();
+      var multiplier = getStreakMultiplier();
+      
+      // ============ حساب مكوّن الصلوات ============
+      var prayerComponent = 0;
+      var prayerReport = "";
+      var allPrayers = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
+      
+      for (var pi = 0; pi < allPrayers.length; pi++) {
+        var pn = allPrayers[pi];
+        var pnAbs = getAbsoluteMins(parseTimeStr(prayerTimes[pn]), fajrMins);
+        
+        if (currentAbs >= pnAbs) {
+          var hasPrayed = (props.getProperty('PRAYED_' + pn) === islamicDateStr);
+          if (hasPrayed) {
+            prayerComponent += 3; 
+          } else {
+            prayerComponent -= 8; 
+            prayerReport += "⚠️ " + pn + " لسه مسجلتش! ";
+          }
+        }
+      }
+      
+      var finalMsg = "";
+      var pointsChange = 0;
+      
+      // ============ وضع الاستعادة (أيام 0-6) ============
+      if (days < 7) {
+        var rawPenalty = Math.round(25 * (1 - days / 7));
+        var prayerPenalty = Math.max(0, -prayerComponent); 
+        var totalPenalty = rawPenalty + prayerPenalty;
+        
+        var shields = parseInt(props.getProperty('SHIELDS') || "0");
+        var shieldActive = props.getProperty('SHIELD_ACTIVE') === "true";
+        
+        if (shieldActive && days < 3) {
+          pointsChange = 0;
+          finalMsg = "🛡️ الدرع حمتك اليوم! الأيام الثلاثة الأولى مش هيتخصم منك.";
+          if (days === 2) {
+            props.setProperty('SHIELD_ACTIVE', "false");
+            finalMsg += "\n⚠️ الدرع خلصت. من بكرة العقوبة تبدأ بشكل طبيعي ومخففة.";
+          }
+        } else {
+          pointsChange = -totalPenalty;
+          finalMsg = "تفتيش القيادة 🚨\n\n" +
+            "📍 يوم الاستعادة: " + days + " من 7\n" +
+            "🔻 خصم صمود: " + rawPenalty + " نقطة\n";
+          if (prayerPenalty > 0) {
+            finalMsg += "🔻 خصم صلوات: " + prayerPenalty + " نقطة\n";
+            finalMsg += prayerReport + "\n";
+          }
+          
+          var remainingDays = 7 - days;
+          var nextPenalty = Math.round(25 * (1 - (days + 1) / 7));
+          finalMsg += "\n💡 العقوبة بكرة: " + nextPenalty + " نقطة (بدل " + rawPenalty + ")\n";
+          finalMsg += "🏁 بعد " + remainingDays + " " + (remainingDays === 1 ? "يوم" : "أيام") + 
+                      " تنتهي فترة الاستعادة!\n\n" +
+                      "خصم اليوم: " + totalPenalty + " نقطة ⚔️";
+        }
+      }
+      // ============ اليوم السابع ============
+      else if (days === 7) {
+        var bonus = 50;
+        pointsChange = bonus;
+        finalMsg = "🔥 أسبوع استعادة مكتمل! 🔥\n\n" +
+          "يا وحش! قاومت لمدة 7 أيام كاملة رغم الخصومات!\n" +
+          "فترة الاستعادة انتهت. من دلوقتي التفتيش هيزيد عليك مش يخصم!\n\n" +
+          "مكافأة العودة للقتال: +" + bonus + " نقطة 🏆";
+        addMedal("🔥 وسام العائد الأقوى", chatId);
+      }
+      // ============ وضع الصمود العادي (أيام 8+) ============
+      else {
+        var baseBonus = Math.min(100, 20 + Math.floor(days / 7) * 5);
+        var bonusWithPrayers = baseBonus + prayerComponent;
+        var finalBonus = Math.max(5, Math.round(bonusWithPrayers * multiplier));
+        pointsChange = finalBonus;
+        
+        finalMsg = "فحص مفاجئ من القيادة 🚨\n\n" +
+          "📍 أيام الصمود: " + days + " يوم\n" +
+          "💰 مكافأة الصمود: +" + baseBonus + "\n";
+        if (prayerComponent > 0) {
+          finalMsg += "🙏 مكافأة الصلوات: +" + prayerComponent + "\n";
+        } else if (prayerComponent < 0) {
+          finalMsg += "⚠️ خصم صلوات: " + prayerComponent + "\n";
+          finalMsg += prayerReport + "\n";
+        }
+        if (multiplier > 1) {
+          finalMsg += "🔥 مضاعف الصمود: ×" + multiplier + "\n";
+        }
+        finalMsg += "\nالمجموع: +" + finalBonus + " نقطة";
+      }
+      
+      var newP = addPoints(pointsChange);
+      sendMessage(chatId, finalMsg + "\n\n⚡ رصيدك الحالي: " + newP + " نقطة");
+      
+      if (days >= 7)  addMedal("نجمة الأسبوع النحاسية 🥉", chatId);
       if (days >= 30) addMedal("درع الشهر الفضي 🥈", chatId);
       if (days >= 90) addMedal("تاج الصمود الذهبي 🥇", chatId);
       if (days >= 180) addMedal("وسام النقاء المطلق 💎", chatId);
+      if (days >= 365) addMedal("🌍 وسام السنة الأسطورية", chatId);
+      
+      var personalBest = parseInt(props.getProperty('PERSONAL_BEST_STREAK') || "0");
+      if (days > personalBest) {
+        props.setProperty('PERSONAL_BEST_STREAK', days.toString());
+        if (days > 7) { 
+          sendMessage(chatId, "🏆 رقم شخصي جديد! كسرت أعلى رقم عندك: " + days + " يوم!\nالرقم القديم كان: " + personalBest + " يوم 🎉");
+        }
+      }
+      
+      // ============ التحدي الجوكر (Weekly Joker) ============
+      if (currentAbs >= 540 && currentAbs <= 1260) { // بين 9 صباحاً و 9 مساءً
+        if (Math.random() < 0.05) {
+          props.setProperty('JOKER_ACTIVE', "true");
+          var jokerKeys = [
+            [{"text": "قبول تحدي الجوكر 🃏"}],
+            [{"text": "تجاهل ❌"}]
+          ];
+          sendMenuCustom(chatId, "🃏 **تحدي الجوكر ظهر فجأة!**\n\nأمامك فرصة للحصول على 150 نقطة ووسام نادر لو قبلت التحدي وأنجزته الآن. هل تقبل؟", jokerKeys);
+        }
+      }
     }
+  }
+  
+  } catch(e) {
+    Logger.log("Lock failed: " + e);
+  } finally {
+    lock.releaseLock();
   }
 }
