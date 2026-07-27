@@ -1,66 +1,66 @@
 # 🦅 CampZero-Bot
 
-**Camp Zero** هو بوت تيليجرام (Telegram Bot) مبني على Google Apps Script، مصمم ليكون نظام رقابة شخصي (Accountability System) بطابع عسكري صارم. يهدف البوت إلى بناء شخصية قوية، الحفاظ على الالتزام بالصلوات الخمس في أوقاتها، التخلص من العادات السيئة، وبناء عادات إيجابية من خلال نظام نقاط ورتب عسكرية.
+**Camp Zero** is a Telegram Bot built on Google Apps Script, designed to serve as a strict military-themed personal accountability system. The bot aims to build strong character, ensure commitment to the five daily prayers on time, break bad habits, and build positive ones through a system of points and military ranks.
 
-## 🌟 الميزات الرئيسية (Features)
-- **🕰️ نظام توقيت إسلامي ذكي:** يبدأ اليوم الجديد مع أذان الفجر وليس عند منتصف الليل، لضمان دقة الحسابات لمن يسهرون.
-- **🕌 متتبع صلوات ديناميكي:** أزرار الصلاة تظهر فقط عند دخول وقتها، وتختفي بمجرد تأديتها للحفاظ على واجهة مستخدم نظيفة.
-- **🔥 ستريك الصلوات (Prayer Streak):** عداد ذكي يحسب عدد الأيام المتتالية التي أتممت فيها الصلوات الخمس بنجاح، ويُصفّر تلقائياً عند التقصير.
-- **🎖️ نظام الرتب والأوسمة:** اكسب النقاط من التزامك بالمهام والصلوات في وقتها (التبكير يُعطى 15 نقطة، بينما التأخير يقلل النقاط تدريجياً)، وارتقِ من رتبة "ملازم" وحتى "مشير". 
-- **📉 سجل السقوط (Wall of Shame):** تتبع انتكاساتك بدقة لمعرفة متى وكيف سقطت لتجنب تكرار الخطأ.
-- **🏆 خزينة الانتصارات:** سجل انتصاراتك المعنوية الصغيرة يومياً (بحد أقصى 3 مكافآت يومياً) واستمد منها الطاقة في أوقات الضعف.
-- **🚨 فحص مفاجئ وعقوبات:** تفتيش عسكري للمهام المتأخرة، وخصم 20 نقطة عند خروج وقت الصلاة لتصبح "قضاء".
-- **🛡️ إذن الطوارئ:** وضع خاص للسفر أو المرض يوقف العقوبات ويحسب نقاط كاملة بشكل مؤقت لحين الفك اليدوي.
-- **📞 القصف الصوتي للفجر:** استدعاء صوتي تلقائي عبر خدمة `CallMeBot` في حال تأخرت عن تأدية الفجر بعد الأذان.
-- **📅 عمليات أسبوعية ومهام خاصة:** مهام دينية عشوائية (مثل قراءة سورة، صيام، حفظ آيات) بمكافآت ضخمة لكسر الروتين.
+## 🌟 Key Features
+- **🕰️ Smart Islamic Timing System:** The new day begins with the Fajr (Dawn) prayer call, not at midnight, ensuring accurate calculations for night owls.
+- **🕌 Dynamic Prayer Tracker:** Prayer buttons appear only when their time arrives and disappear once performed, maintaining a clean user interface.
+- **🔥 Prayer Streak:** A smart counter that tracks consecutive days of completing all five daily prayers successfully, automatically resetting upon failure.
+- **🎖️ Ranks and Medals System:** Earn points by completing tasks and praying on time (early prayers grant 15 points, while delays gradually reduce points), and climb the ranks from "Lieutenant" to "Field Marshal".
+- **📉 Wall of Shame:** Accurately track your relapses to understand when and how you fell, helping you avoid repeating the same mistakes.
+- **🏆 Victory Vault:** Log your small moral victories daily (max 3 rewards per day) and draw energy from them during moments of weakness.
+- **🚨 Surprise Inspections & Penalties:** Random military inspections for delayed tasks, and a 20-point deduction if a prayer time entirely passes and becomes "Qadaa".
+- **🛡️ Emergency Mode:** A special mode for travel or illness that pauses penalties and temporarily grants full points until manually deactivated.
+- **📞 Fajr Audio Bombardment:** Automatic voice calls via the `CallMeBot` service if you delay the Fajr prayer after the call to prayer.
+- **📅 Weekly Operations & Special Missions:** Random religious tasks (e.g., reading a specific Surah, fasting, memorizing verses) with massive rewards to break the routine.
 
-## 🚀 طريقة التثبيت والتشغيل (Deployment Guide)
+## 🚀 Deployment Guide
 
-المشروع لا يتطلب أي خوادم (Servers)، يتم استضافته بالكامل ومجاناً على Google Apps Script.
+The project requires no traditional servers; it is hosted entirely and for free on Google Apps Script.
 
-### الخطوة 1: تجهيز بوت التيليجرام
-1. افتح تطبيق تيليجرام وابحث عن `@BotFather`.
-2. أرسل أمر `/newbot` واتبع التعليمات لاختيار اسم ويوزرنيم للبوت.
-3. انسخ الـ **Bot Token** الذي سيظهر لك (احتفظ به سرياً).
+### Step 1: Prepare the Telegram Bot
+1. Open Telegram and search for `@BotFather`.
+2. Send the `/newbot` command and follow the instructions to choose a name and username for your bot.
+3. Copy the generated **Bot Token** (keep it secret).
 
-### الخطوة 2: استنساخ المشروع في Google Apps Script
-1. اذهب إلى [Google Apps Script](https://script.google.com/) وسجل الدخول بحساب جوجل.
-2. اضغط على **New Project** (مشروع جديد).
-3. احذف الكود الافتراضي، وانسخ كل الكود الموجود في ملف `Code.gs` في هذا المستودع والصقه هناك.
-4. في أعلى الكود، استبدل قيمة `BOT_TOKEN` بالتوكن الذي حصلت عليه من BotFather.
+### Step 2: Clone the Project into Google Apps Script
+1. Go to [Google Apps Script](https://script.google.com/) and log in with your Google account.
+2. Click on **New Project**.
+3. Delete the default code, then copy the entire code from `Code.gs` in this repository and paste it there.
+4. At the top of the code, replace the `BOT_TOKEN` value with the token you obtained from BotFather.
 
-### الخطوة 3: تجهيز قاعدة البيانات (Google Sheets)
-1. افتح [Google Sheets](https://sheets.google.com/) وأنشئ ملفاً جديداً.
-2. انسخ الـ **Sheet ID** من رابط الملف (وهو الرمز الطويل بين `/d/` و `/edit`).
-3. ارجع لكود Apps Script واستبدل قيمة `SHEET_ID` في الأعلى بالـ ID الخاص بك.
+### Step 3: Set up the Database (Google Sheets)
+1. Open [Google Sheets](https://sheets.google.com/) and create a new file.
+2. Copy the **Sheet ID** from the file's URL (it's the long string between `/d/` and `/edit`).
+3. Return to the Apps Script code and replace the `SHEET_ID` value at the top with your ID.
 
-### الخطوة 4: النشر كـ Web App (Deploy)
-1. من الزاوية العلوية اليمنى في Apps Script، اضغط على **Deploy** ثم **New deployment**.
-2. من أيمن الشاشة (علامة الترس ⚙️)، اختر **Web app**.
-3. في الإعدادات:
-   - **Execute as:** اختر `Me (Your Email)`.
-   - **Who has access:** اختر `Anyone`.
-4. اضغط **Deploy** ووافق على الصلاحيات المطلوبة (ستظهر شاشة تحذير أمني، اضغط Advanced ثم Go to project).
-5. سيظهر لك رابط الـ **Web app URL**، قم بنسخه.
-6. الصق الرابط المنسوخ في متغير `SCRIPT_URL` أعلى الكود.
-7. ⚠️ **هام جداً:** بعد تعديل الرابط، يجب عمل Deploy مرة أخرى عبر: **Manage deployments** ⬅️ تعديل (أيقونة القلم) ⬅️ من خيار Version اختر **New version** ⬅️ ثم Deploy.
+### Step 4: Deploy as a Web App
+1. In the top right corner of Apps Script, click **Deploy**, then **New deployment**.
+2. From the left sidebar (gear icon ⚙️), select **Web app**.
+3. In the settings:
+   - **Execute as:** Choose `Me (Your Email)`.
+   - **Who has access:** Choose `Anyone`.
+4. Click **Deploy** and grant the required permissions (a security warning will appear; click Advanced, then Go to project).
+5. Copy the generated **Web app URL**.
+6. Paste the copied URL into the `SCRIPT_URL` variable at the top of the code.
+7. ⚠️ **CRITICAL:** After modifying the URL, you MUST deploy again via: **Manage deployments** ⬅️ Edit (Pencil icon) ⬅️ From the Version dropdown select **New version** ⬅️ Then Deploy.
 
-### الخطوة 5: تفعيل الـ Webhook
-1. في Apps Script، ابحث عن الدالة التي تسمى `setWebhook` من القائمة المنسدلة في الأعلى.
-2. اضغط على زر **Run** (تشغيل).
-3. من المفترض أن يظهر لك في الـ Execution log رسالة `"ok": true`. هكذا تم ربط التيليجرام بالكود بنجاح!
+### Step 5: Activate the Webhook
+1. In Apps Script, find the function named `setWebhook` from the top dropdown menu.
+2. Click **Run**.
+3. You should see `{"ok": true}` in the Execution log. Your Telegram bot is now successfully linked to the code!
 
-### الخطوة 6: تفعيل التذكيرات الدورية (Time-driven Triggers)
-1. في القائمة الجانبية اليسرى بـ Apps Script، اضغط على أيقونة **Triggers** (علامة الساعة/المنبه ⏰).
-2. اضغط **Add Trigger** بالأسفل.
-3. الإعدادات:
-   - **Choose which function to run:** اختر `checkAndRemind`.
-   - **Select event source:** اختر `Time-driven`.
-   - **Select type of time based trigger:** اختر `Minutes timer`.
-   - **Select minute interval:** اختر `Every 5 minutes`.
-4. اضغط Save.
+### Step 6: Enable Periodic Reminders (Time-driven Triggers)
+1. In the left sidebar of Apps Script, click the **Triggers** icon (alarm clock ⏰).
+2. Click **Add Trigger** at the bottom.
+3. Settings:
+   - **Choose which function to run:** Select `checkAndRemind`.
+   - **Select event source:** Select `Time-driven`.
+   - **Select type of time based trigger:** Select `Minutes timer`.
+   - **Select minute interval:** Select `Every 5 minutes`.
+4. Click Save.
 
-🎉 **انتهى!** اذهب الآن إلى البوت الخاص بك في تيليجرام واكتب `/start` وابدأ معسكرك.
+🎉 **Done!** Now go to your bot on Telegram, type `/start`, and begin your camp.
 
 ---
-> "الشهوة لحظة والندم سنين، والانتصار لحظة والفخر سنين." 🦅
+> "Lust is a moment, and regret is years. Victory is a moment, and pride is years." 🦅
