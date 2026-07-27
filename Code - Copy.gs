@@ -1,6 +1,6 @@
-var BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
-var SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
-var SHEET_ID = "YOUR_SHEET_ID_HERE";
+var BOT_TOKEN = "8607942971:AAGo-CUW-WkD4vTnczifsp9lsHGUM4byOu4";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwc9UmHwvM6dwFtZpWD0ha8kTTo_8toWJMrp8qRCv8gYiHbxTaSOpj4sNPjtUTVIJqs/exec";
+var SHEET_ID = "1ytkQiI_Tui-8Xx6HQH3RggcwCs1EM-TlGd_f3lT1g7c";
 
 // ---------------------------
 // رتب ونقاط
@@ -27,19 +27,6 @@ function getRank(points) {
   return currentRank;
 }
 
-function getNextRankProgress(points) {
-  for (var i = 0; i < RANKS.length - 1; i++) {
-    if (points < RANKS[i+1].min) {
-      var needed = RANKS[i+1].min - points;
-      var total = RANKS[i+1].min - RANKS[i].min;
-      var pct = Math.floor(((points - RANKS[i].min) / total) * 10);
-      var bar = "█".repeat(pct) + "░".repeat(10-pct);
-      return "`[" + bar + "]` " + needed + " نقطة للرتبة: " + RANKS[i+1].name;
-    }
-  }
-  return "🌌 بلغت أعلى رتبة. أنت المشير الآن.";
-}
-
 function getPoints() {
   var p = PropertiesService.getScriptProperties().getProperty('POINTS');
   return p ? parseInt(p) : 0;
@@ -62,7 +49,7 @@ function addMedal(medal, chatId) {
   if (currentMedals.indexOf(medal) === -1) {
     if (currentMedals === "لا يوجد أوسمة حتى الآن.") currentMedals = "";
     PropertiesService.getScriptProperties().setProperty('MY_MEDALS', currentMedals + medal + " | ");
-    sendMessage(chatId, "🎉 تم تقليدك وسام جديد: *" + medal + "*\nالوسام اتضاف لملفك العسكري.");
+    sendMessage(chatId, "🎉 تم تقليدك وسام جديد: " + medal + "\nالوسام اتضاف لملفك العسكري.");
   }
 }
 
@@ -89,10 +76,9 @@ function doPost(e) {
 // Time & Islamic Date Logic
 // ---------------------------
 function getFajrMins() {
-  var prayerTimes = getPrayerTimes(); 
-  var fajrStr = prayerTimes["الفجر"];
-  if (fajrStr) {
-    var parts = fajrStr.split(":");
+  var cachedTimes = JSON.parse(PropertiesService.getScriptProperties().getProperty('PRAYER_TIMES'));
+  if (cachedTimes && cachedTimes["الفجر"]) {
+    var parts = cachedTimes["الفجر"].split(":");
     return parseInt(parts[0]) * 60 + parseInt(parts[1]);
   }
   return 240; // Default 4:00 AM
@@ -128,6 +114,7 @@ function getMissedPrayers(currentAbs, prayerTimes, props, islamicDateStr, fajrMi
   
   for (var i = 0; i < prayers.length; i++) {
     var pName = prayers[i];
+    var isMissed = false;
     var nextAbs;
     
     if (pName === "الفجر") {
@@ -136,6 +123,7 @@ function getMissedPrayers(currentAbs, prayerTimes, props, islamicDateStr, fajrMi
        var nextPName = prayers[i + 1];
        nextAbs = getAbsoluteMins(parseTimeStr(prayerTimes[nextPName]), fajrMins);
     } else {
+       // العشاء becomes qadaa next Fajr
        nextAbs = fajrMins + 1440; 
     }
     
@@ -176,65 +164,13 @@ function getPrayerPoints(actualPrayer, currentAbs, prayerTimes, isExcused, misse
   }
 }
 
-function updatePrayerStreak(islamicDateStr, props, chatId) {
-  var prayersList = ["الفجر", "الظهر", "العصر", "المغرب", "العشاء"];
-  var allPrayed = true;
-  for (var i = 0; i < prayersList.length; i++) {
-    if (props.getProperty('PRAYED_' + prayersList[i]) !== islamicDateStr) {
-      allPrayed = false;
-      break;
-    }
-  }
-  
-  if (allPrayed) {
-    var lastComplete = props.getProperty('PRAYER_STREAK_LAST');
-    if (lastComplete !== islamicDateStr) {
-      var streak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
-      var now = new Date();
-      var yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      var yesterdayStr = Utilities.formatDate(yesterday, "GMT+3", "yyyy-MM-dd");
-      
-      if (lastComplete === yesterdayStr) {
-        streak++;
-      } else {
-        streak = 1;
-      }
-      
-      props.setProperty('PRAYER_STREAK', streak.toString());
-      props.setProperty('PRAYER_STREAK_LAST', islamicDateStr);
-      
-      var maxStreak = parseInt(props.getProperty('MAX_PRAYER_STREAK') || "0");
-      if (streak > maxStreak) {
-        props.setProperty('MAX_PRAYER_STREAK', streak.toString());
-      }
-      
-      sendMessage(chatId, "🌟 **إنجاز عظيم!** لقد أكملت جميع الصلوات الخمس لليوم. ستريك الصلوات الحالي: *" + streak + "* يوم متتالي 🦅");
-    }
-  }
-}
-
 // ---------------------------
 // Main Logic
 // ---------------------------
 function handleMessage(message) {
-  var text = message.text;
   var chatId = message.chat.id;
+  var text = message.text;
   var props = PropertiesService.getScriptProperties();
-  
-  if (!text) {
-    sendMessage(chatId, "القيادة بتستقبل النصوص فقط 🎖️");
-    return;
-  }
-  
-  var adminChatId = props.getProperty('ADMIN_CHAT_ID');
-  if (!adminChatId) {
-    props.setProperty('ADMIN_CHAT_ID', chatId.toString());
-    adminChatId = chatId.toString();
-    sendMessage(chatId, "🔒 **تم التأمين:** تم تعيينك كقائد المعسكر الأوحد (Single-user). لن يستجيب البوت لأي شخص آخر غيرك.");
-  } else if (adminChatId !== chatId.toString()) {
-    sendMessage(chatId, "⚠️ هذا المعسكر عسكري وخاص. ليس لديك تصريح بالدخول.");
-    return;
-  }
   
   props.setProperty('CHAT_ID', chatId.toString());
   if (message.from && message.from.username) {
@@ -247,56 +183,6 @@ function handleMessage(message) {
   
   if (text === "/start") {
     sendMenu(chatId, "أهلاً بك في Camp Zero. تم تفعيل نظام التجنيد والمهام السرية. ⚔️", getKeyboard(p));
-    return;
-  }
-  
-  if (text === "/help") {
-    var helpMsg = "🛠️ **قائمة مساعدة Camp Zero:**\n\n";
-    helpMsg += "🔹 **الأوامر السرية:**\n";
-    helpMsg += "`/fix` : مسح الذاكرة المؤقتة للصلوات (استخدمه لو حصل خطأ تقني في الزراير)\n";
-    helpMsg += "`/apology` : تعويض تقني من القيادة (يُستخدم مرة واحدة فقط)\n";
-    helpMsg += "`/call @username` : إرسال مكالمة استدعاء صوتية عبر CallMeBot\n";
-    helpMsg += "`/mystats` : تقرير إحصائي تفصيلي لأدائك الشامل\n";
-    helpMsg += "`/help` : عرض هذه القائمة\n\n";
-    helpMsg += "🔹 **أزرار الكيبورد:**\n";
-    helpMsg += "🦍 **ملف الوحش:** بيعرض رتبتك، نقطك، أيام الصمود، وستريك الصلوات.\n";
-    helpMsg += "⚔️ **العودة للقتال:** لو حصل انتكاسة، بتدوس هنا وتحدد الوقت عشان تصفر العداد.\n";
-    helpMsg += "🛡️ **إذن طوارئ:** لو مسافر، فعّله عشان يوقف العقوبات.\n";
-    helpMsg += "📉 **سجل السقوط:** بيحتفظ بتواريخ انتكاساتك عشان تتعلم منها.\n";
-    helpMsg += "🏆 **خزينة الانتصارات:** سجل انتصاراتك المعنوية.\n";
-    helpMsg += "📅 **عملية الأسبوع:** عملية بتتغير كل أسبوع بـ 200 نقطة.\n";
-    helpMsg += "🎯 **مهمة خاصة:** مهمة دينية سريعة بـ 50 نقطة.\n";
-    helpMsg += "📦 **صندوق الدعم:** بـ 100 نقطة بيطلعلك نصيحة أو وسام نادر.\n";
-    sendMenu(chatId, helpMsg, getKeyboard(p));
-    return;
-  }
-  
-  if (text === "/mystats") {
-    var onTime = parseInt(props.getProperty('WEEKLY_ON_TIME_COUNT') || "0");
-    var qadaa = parseInt(props.getProperty('WEEKLY_QADAA_COUNT') || "0");
-    var totalPrayers = onTime + qadaa;
-    var percentage = totalPrayers === 0 ? 0 : Math.floor((onTime / totalPrayers) * 100);
-    
-    var vCount = 0;
-    var vault = props.getProperty('VICTORY_VAULT');
-    if (vault) vCount = JSON.parse(vault).length;
-    
-    var fCount = 0;
-    var shame = props.getProperty('WALL_OF_SHAME');
-    if (shame) fCount = JSON.parse(shame).length;
-    
-    var maxStreak = props.getProperty('MAX_PRAYER_STREAK') || "0";
-    
-    var stats = "📊 **التقرير الإحصائي (My Stats):**\n\n";
-    stats += "✅ صلوات في وقتها (هذا الأسبوع): " + onTime + "\n";
-    stats += "❌ صلوات قضاء (هذا الأسبوع): " + qadaa + "\n";
-    stats += "📈 نسبة الالتزام الأسبوعي: " + percentage + "%\n\n";
-    stats += "🏆 إجمالي الانتصارات المسجلة: " + vCount + "\n";
-    stats += "📉 إجمالي السقطات في سجل الخزي: " + fCount + "\n";
-    stats += "🔥 أطول ستريك صلوات متتالية: " + maxStreak + " يوم\n";
-    stats += "💎 إجمالي النقاط الحالي: " + p + " نقطة\n";
-    
-    sendMenu(chatId, stats, getKeyboard(p));
     return;
   }
   
@@ -317,7 +203,7 @@ function handleMessage(message) {
     }
     props.setProperty('APOLOGY_CLAIMED', 'true');
     var newP = addPoints(20);
-    sendMessage(chatId, "تعويض من القيادة عن الخطأ التقني 🎖️: تم إرجاع الـ 20 نقطة. رصيدك الحالي: " + newP);
+    sendMessage(chatId, "تعويض من القيادة عن الخطأ التقني 🎖️: تم إرجاع الـ 20 نقطة اللي اتخصموا منك ظلماً. رصيدك الحالي: " + newP);
     sendMenu(chatId, "القائمة الرئيسية 👇", getKeyboard(newP));
     return;
   }
@@ -325,7 +211,7 @@ function handleMessage(message) {
   if (text.indexOf("/call") === 0) {
     var parts = text.split(" ");
     if (parts.length < 2) {
-      sendMessage(chatId, "اكتب الأمر كدة: \n`/call @YourUsername`");
+      sendMessage(chatId, "اكتب الأمر كدة: \n/call @YourUsername");
       return;
     }
     var username = parts[1];
@@ -344,13 +230,14 @@ function handleMessage(message) {
     return;
   }
   
+  // اعتراض رسالة الانتصار
   if (props.getProperty('AWAITING_VICTORY') === "true" && text !== "إلغاء ❌") {
     var vault = props.getProperty('VICTORY_VAULT');
     if (!vault) vault = "[]";
     var vaultArr = JSON.parse(vault);
     var dateStr = Utilities.formatDate(new Date(), "GMT+3", "yyyy-MM-dd");
     vaultArr.push("[" + dateStr + "] " + text);
-    if (vaultArr.length > 50) vaultArr.shift(); 
+    if (vaultArr.length > 50) vaultArr.shift(); // Cap array size
     props.setProperty('VICTORY_VAULT', JSON.stringify(vaultArr));
     props.setProperty('AWAITING_VICTORY', "false");
     
@@ -389,23 +276,14 @@ function handleMessage(message) {
       var currentAbs = getAbsoluteMins(currentMinsRaw, fajrMins);
       
       var missedArr = getMissedPrayers(currentAbs, prayerTimes, props, islamicDateStr, fajrMins);
+      
       var earnedPoints = getPrayerPoints(actualPrayer, currentAbs, prayerTimes, isEmergency, missedArr, fajrMins);
-      
-      // Update stats
-      var isMissed = (missedArr.indexOf(actualPrayer) !== -1);
-      if (isMissed && !isEmergency) {
-        var qCount = parseInt(props.getProperty('WEEKLY_QADAA_COUNT') || "0");
-        props.setProperty('WEEKLY_QADAA_COUNT', (qCount + 1).toString());
-      } else {
-        var oCount = parseInt(props.getProperty('WEEKLY_ON_TIME_COUNT') || "0");
-        props.setProperty('WEEKLY_ON_TIME_COUNT', (oCount + 1).toString());
-      }
-      
       var newP = addPoints(earnedPoints);
       
       var extraMsg = "";
       if (isEmergency) {
         extraMsg = " (النقاط كاملة لوجود عذر 🛡️)";
+        props.setProperty('EMERGENCY_MODE', "false"); 
       } else if (earnedPoints === 15) {
         extraMsg = " (عاش أبطال التبكير 🔥)";
       } else if (earnedPoints === 10) {
@@ -417,7 +295,6 @@ function handleMessage(message) {
       }
       
       sendMessage(chatId, "تم إنجاز صلاة " + text + " بنجاح 🦅! تم إضافة " + earnedPoints + " نقطة " + extraMsg + "\nرصيدك الحالي: " + newP);
-      updatePrayerStreak(islamicDateStr, props, chatId);
       sendMenu(chatId, "استعد للي بعدها. الزرار بتاعها هيختفي عشان الكيبورد يفضل رايق.", getKeyboard(newP));
     } else {
       sendMessage(chatId, "أنت سجلت الصلاة دي قبل كده يا بطل.");
@@ -467,22 +344,26 @@ function handleMessage(message) {
   }
   else if (text === "صندوق الدعم 📦") {
     if (p < 1001) return; 
-    var newP = addPoints(-100);
-    var rewards = [
-      "مقولة سرية: 'الشهوة لحظة، والندم سنين. والانتصار لحظة، والفخر سنين.'",
-      "دعاء مستجاب: 'اللهم يا مقلب القلوب ثبت قلبي على دينك'. رددها دايما.",
-      "مقولة سرية: 'الشيطان بيزينلك المعصية قبلها، وبيسيبك تندم لوحدك بعدها. خليك أذكى منه.'",
-      "وسام جديد: 🛡️ الدرع الفولاذي",
-      "وسام جديد: ⚔️ سيف الحق",
-      "مقولة سرية: 'كل تعب في مقاومة الهوى، بيتبني بيه قصر في الجنة.'"
-    ];
-    var r = rewards[Math.floor(Math.random()*rewards.length)];
-    if (r.indexOf("وسام جديد") !== -1) {
-      var medal = r.split(": ")[1];
-      addMedal(medal, chatId);
+    if (p < 100) {
+      sendMessage(chatId, "رصيدك ميكفيش يا وحش! محتاج 100 نقطة.");
+    } else {
+      var newP = addPoints(-100);
+      var rewards = [
+        "مقولة سرية: 'الشهوة لحظة، والندم سنين. والانتصار لحظة، والفخر سنين.'",
+        "دعاء مستجاب: 'اللهم يا مقلب القلوب ثبت قلبي على دينك'. رددها دايما.",
+        "مقولة سرية: 'الشيطان بيزينلك المعصية قبلها، وبيسيبك تندم لوحدك بعدها. خليك أذكى منه.'",
+        "وسام جديد: 🛡️ الدرع الفولاذي",
+        "وسام جديد: ⚔️ سيف الحق",
+        "مقولة سرية: 'كل تعب في مقاومة الهوى، بيتبني بيه قصر في الجنة.'"
+      ];
+      var r = rewards[Math.floor(Math.random()*rewards.length)];
+      if (r.indexOf("وسام جديد") !== -1) {
+        var medal = r.split(": ")[1];
+        addMedal(medal, chatId);
+      }
+      sendMessage(chatId, "🎁 فتحت الصندوق وطلعلك:\n\n" + r);
+      sendMenu(chatId, "تم خصم 100 نقطة. رصيدك الحالي: " + newP, getKeyboard(newP));
     }
-    sendMessage(chatId, "🎁 فتحت الصندوق وطلعلك:\n\n*" + r + "*");
-    sendMenu(chatId, "تم خصم 100 نقطة. رصيدك الحالي: " + newP, getKeyboard(newP));
   }
   else if (text === "خزينة الانتصارات 🏆") {
     var keys = [
@@ -508,7 +389,7 @@ function handleMessage(message) {
     } else {
       var vaultArr = JSON.parse(vault);
       var randomVic = vaultArr[Math.floor(Math.random() * vaultArr.length)];
-      sendMessage(chatId, "🔥 رسالة من الماضي:\n\n*" + randomVic + "*\n\nفاكر لما قاومت وكنت قوي؟ إنت تقدر تعملها تاني دلوقتي! 🦅");
+      sendMessage(chatId, "🔥 رسالة من الماضي:\n\n" + randomVic + "\n\nفاكر لما قاومت وكنت قوي؟ إنت تقدر تعملها تاني دلوقتي! 🦅");
     }
   }
   else if (text === "عملية الأسبوع 📅") {
@@ -545,35 +426,17 @@ function handleMessage(message) {
       sendMenuCustom(chatId, "📅 عملية الأسبوع:\n\n" + currentOp + "\n\nالمكافأة: 200 نقطة ووسام نادر.", keys);
     }
   }
-  else if (text === "تم إنجاز العملية الأسبوعية ✅") {
-    var opStatus = props.getProperty('WEEKLY_OP_STATUS');
-    if (opStatus === "DONE") {
-      sendMessage(chatId, "أنت أنجزت العملية من قبل يا بطل! 🦅");
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
-    } else if (opStatus === "PENDING") {
-      props.setProperty('WEEKLY_OP_STATUS', "DONE");
-      var newP = addPoints(200);
-      addMedal("🎖️ وسام العملية الأسبوعية", chatId);
-      sendMessage(chatId, "عاش يا أسطورة! 200 نقطة ووسام العملية الأسبوعية تم منحهم لك. رصيدك: " + newP);
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
-    } else {
-      sendMenu(chatId, "مفيش عملية نشطة دلوقتي.", getKeyboard(p));
-    }
-  }
   else if (text === "ملف الوحش 🦍") {
     var details = getStreakDetails();
     var days = getStreakDays();
     var msgText = getStreakMessage(days);
     var rank = getRank(p);
     var medals = getMedals();
-    var prayerStreak = props.getProperty('PRAYER_STREAK') || "0";
     
     var profile = "📋 **الملف العسكري (Camp Zero):**\n";
     profile += "الرتبة: " + rank + "\n";
     profile += "النقاط: " + p + " نقطة\n";
-    profile += "أيام الصمود: " + days + " يوم\n";
-    profile += "ستريك الصلوات الخمس: " + prayerStreak + " يوم متتالي 🕌\n";
-    profile += "📈 التقدم للرتبة التالية:\n" + getNextRankProgress(p) + "\n\n";
+    profile += "أيام الصمود: " + days + " يوم\n\n";
     profile += "**تفاصيل مدة الصمود:**\n" + details + "\n\n";
     profile += "الأوسمة: " + medals + "\n\n";
     profile += "💬 رسالة القيادة:\n" + msgText;
@@ -617,7 +480,7 @@ function handleMessage(message) {
     if (!shame) shame = "[]";
     var shameArr = JSON.parse(shame);
     shameArr.push(relapseDateStr);
-    if (shameArr.length > 50) shameArr.shift(); 
+    if (shameArr.length > 50) shameArr.shift(); // Cap size
     props.setProperty('WALL_OF_SHAME', JSON.stringify(shameArr));
     
     props.setProperty('LAST_RESET_DATE', relapseTime.toString());
@@ -640,6 +503,8 @@ function getKeyboard(points) {
   var isEmergency = (props.getProperty('EMERGENCY_MODE') === "true");
   
   var keys = [];
+  
+  // Dynamic Prayer Buttons
   var now = new Date();
   var currentTimeStr = Utilities.formatDate(now, "GMT+3", "HH:mm");
   var currentMinsRaw = parseTimeStr(currentTimeStr);
@@ -657,6 +522,7 @@ function getKeyboard(points) {
     var pAbs = getAbsoluteMins(parseTimeStr(prayerTimes[pName]), fajrMins);
     var hasPrayed = (props.getProperty('PRAYED_' + pName) === islamicDateStr);
     
+    // Show if current absolute time >= prayer absolute time AND user hasn't prayed yet
     if (currentAbs >= pAbs && !hasPrayed) {
       if (prayerRow1.length < 3) {
         prayerRow1.push({"text": pName});
@@ -700,7 +566,7 @@ function sendMenu(chatId, text, keys) {
     "resize_keyboard": true,
     "persistent": true
   };
-  var payload = { "chat_id": chatId, "text": text, "parse_mode": "Markdown", "reply_markup": JSON.stringify(keyboard) };
+  var payload = { "chat_id": chatId, "text": text, "reply_markup": JSON.stringify(keyboard) };
   var options = { "method": "post", "contentType": "application/json", "payload": JSON.stringify(payload) };
   UrlFetchApp.fetch(url, options);
 }
@@ -712,14 +578,14 @@ function sendMenuCustom(chatId, text, keys) {
     "resize_keyboard": true,
     "persistent": true
   };
-  var payload = { "chat_id": chatId, "text": text, "parse_mode": "Markdown", "reply_markup": JSON.stringify(keyboard) };
+  var payload = { "chat_id": chatId, "text": text, "reply_markup": JSON.stringify(keyboard) };
   var options = { "method": "post", "contentType": "application/json", "payload": JSON.stringify(payload) };
   UrlFetchApp.fetch(url, options);
 }
 
 function sendMessage(chatId, text) {
   var url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
-  var payload = { "chat_id": chatId, "text": text, "parse_mode": "Markdown" };
+  var payload = { "chat_id": chatId, "text": text };
   var options = { "method": "post", "contentType": "application/json", "payload": JSON.stringify(payload) };
   UrlFetchApp.fetch(url, options);
 }
@@ -804,76 +670,27 @@ function getStreakMessage(days) {
 // ---------------------------
 // Automations & Triggers
 // ---------------------------
-function sendWeeklySummary(chatId, props) {
-  var onTime = parseInt(props.getProperty('WEEKLY_ON_TIME_COUNT') || "0");
-  var qadaa = parseInt(props.getProperty('WEEKLY_QADAA_COUNT') || "0");
-  var totalPrayers = onTime + qadaa;
-  var percentage = totalPrayers === 0 ? 0 : Math.floor((onTime / totalPrayers) * 100);
-  
-  var msg = "📅 **الملخص الأسبوعي للقيادة:**\n\n";
-  msg += "أديت الأسبوع ده " + onTime + " صلوات في وقتهم، و " + qadaa + " قضاء.\n";
-  msg += "نسبة الالتزام: " + percentage + "%\n\n";
-  if (percentage >= 90) msg += "أداء أسطوري! استمر يا بطل. 🦅";
-  else if (percentage >= 50) msg += "أداء متوسط، تقدر تعمل أحسن من كدة الأسبوع الجاي. ⚔️";
-  else msg += "أداء ضعيف! لازم تفوق لنفسك، المعسكر مابيرحمش المكسلين. ⚠️";
-  
-  sendMessage(chatId, msg);
-  
-  props.setProperty('WEEKLY_ON_TIME_COUNT', "0");
-  props.setProperty('WEEKLY_QADAA_COUNT', "0");
-}
-
-function sendMorningVerse(chatId) {
-  var verses = [
-    "قال تعالى: {وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ وَإِنَّهَا لَكَبِيرَةٌ إِلَّا عَلَى الْخَاشِعِينَ}",
-    "عن النبي ﷺ: «رَكْعَتَا الْفَجْرِ خَيْرٌ مِنَ الدُّنْيَا وَمَا فِيهَا»",
-    "قال تعالى: {إِنَّ قُرْآنَ الْفَجْرِ كَانَ مَشْهُودًا}",
-    "قال تعالى: {وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا}",
-    "عن النبي ﷺ: «مَنْ صَلَّى الصُّبْحَ فَهُوَ فِي ذِمَّةِ اللَّهِ»"
-  ];
-  var msg = "🌅 **إشراقة القيادة:**\n\n" + verses[Math.floor(Math.random() * verses.length)];
-  sendMessage(chatId, msg);
-}
-
 function getPrayerTimes() {
   var props = PropertiesService.getScriptProperties();
   var todayDateStr = Utilities.formatDate(new Date(), "GMT+3", "dd-MM-yyyy");
   var cachedDate = props.getProperty('PRAYER_DATE');
   if (cachedDate === todayDateStr) {
-    var cachedTimes = props.getProperty('PRAYER_TIMES');
-    if (cachedTimes) {
-      var parsed = JSON.parse(cachedTimes);
-      if (parsed["الشروق"]) return parsed;
-    }
+    var cachedTimes = JSON.parse(props.getProperty('PRAYER_TIMES'));
+    if (cachedTimes["الشروق"]) return cachedTimes; 
   }
-  
-  var prayerTimes;
-  try {
-    var response = UrlFetchApp.fetch("https://api.aladhan.com/v1/timingsByCity?city=Tanta&country=Egypt&method=5");
-    var data = JSON.parse(response.getContentText());
-    var timings = data.data.timings;
-    prayerTimes = {
-      "الفجر": timings.Fajr,
-      "الشروق": timings.Sunrise,
-      "الظهر": timings.Dhuhr,
-      "العصر": timings.Asr,
-      "المغرب": timings.Maghrib,
-      "العشاء": timings.Isha
-    };
-    props.setProperty('PRAYER_DATE', todayDateStr);
-    props.setProperty('PRAYER_TIMES', JSON.stringify(prayerTimes));
-  } catch(e) {
-    Logger.log("Prayer API failed: " + e.toString());
-    var cached = props.getProperty('PRAYER_TIMES');
-    if (cached) return JSON.parse(cached);
-    
-    // Fallback
-    prayerTimes = {
-      "الفجر": "04:30", "الشروق": "06:00",
-      "الظهر": "12:00", "العصر": "15:30",
-      "المغرب": "18:00", "العشاء": "19:30"
-    };
-  }
+  var response = UrlFetchApp.fetch("http://api.aladhan.com/v1/timingsByCity?city=Tanta&country=Egypt&method=5");
+  var data = JSON.parse(response.getContentText());
+  var timings = data.data.timings;
+  var prayerTimes = {
+    "الفجر": timings.Fajr,
+    "الشروق": timings.Sunrise,
+    "الظهر": timings.Dhuhr,
+    "العصر": timings.Asr,
+    "المغرب": timings.Maghrib,
+    "العشاء": timings.Isha
+  };
+  props.setProperty('PRAYER_DATE', todayDateStr);
+  props.setProperty('PRAYER_TIMES', JSON.stringify(prayerTimes));
   return prayerTimes;
 }
 
@@ -888,8 +705,7 @@ function checkAndSendReminder(type, prayer, date, chatId, msg) {
 
 function checkAndRemind() {
   var props = PropertiesService.getScriptProperties();
-  var chatId = props.getProperty('ADMIN_CHAT_ID');
-  if (!chatId) chatId = props.getProperty('CHAT_ID'); 
+  var chatId = props.getProperty('CHAT_ID');
   if (!chatId) return; 
   
   var now = new Date();
@@ -899,28 +715,10 @@ function checkAndRemind() {
   var prayerTimes = getPrayerTimes();
   var fajrMins = getFajrMins();
   var currentAbs = getAbsoluteMins(currentMinsRaw, fajrMins);
+  
   var islamicDateStr = getIslamicDateStr();
   var isEmergency = (props.getProperty('EMERGENCY_MODE') === "true");
   var missed = getMissedPrayers(currentAbs, prayerTimes, props, islamicDateStr, fajrMins);
-  
-  var currentDay = Utilities.formatDate(now, "GMT+3", "u"); 
-  if (currentDay === "5" && currentAbs >= 1200) { 
-    var weeklyKey = 'WEEKLY_SUMMARY_' + islamicDateStr;
-    if (!props.getProperty(weeklyKey)) {
-      sendWeeklySummary(chatId, props);
-      props.setProperty(weeklyKey, "true");
-    }
-  }
-  
-  var morningTarget = fajrMins + 15;
-  if (currentAbs >= morningTarget && currentAbs <= morningTarget + 10) { 
-    var verseKey = 'MORNING_VERSE_' + islamicDateStr;
-    if (!props.getProperty(verseKey)) {
-      sendMorningVerse(chatId);
-      props.setProperty(verseKey, "true");
-    }
-  }
-  
   var missedText = "";
   if (missed.length > 0) {
     missedText = "⚠️ إنت عليك قضاء (" + missed.join(" و ") + "). ";
@@ -1003,12 +801,6 @@ function checkAndRemind() {
         if (!hasPrayedCurr && !isEmergency) {
           checkAndSendReminder('PUNISH_QADAA', pName, islamicDateStr, chatId, "تفتيش القيادة: وقت " + pName + " خلص بالكامل وإنت لسه متسجلتش! الصلاة بقت قضاء وتم خصم 20 نقطة من رصيدك كعقاب 💔");
           addPoints(-20);
-          
-          var qCount = parseInt(props.getProperty('WEEKLY_QADAA_COUNT') || "0");
-          props.setProperty('WEEKLY_QADAA_COUNT', (qCount + 1).toString());
-          
-          var updatedP = getPoints();
-          sendMessage(chatId, "الرصيد الحالي بعد الخصم: " + updatedP + " نقطة 💔");
         }
       }
     }
