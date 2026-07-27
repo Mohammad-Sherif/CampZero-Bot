@@ -1,6 +1,6 @@
-var BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
-var SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
-var SHEET_ID = "YOUR_SHEET_ID_HERE";
+var BOT_TOKEN = "8607942971:AAEbgIiMBgFdPXPxCILXVNYl9TDfPzRsaE8";
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwc9UmHwvM6dwFtZpWD0ha8kTTo_8toWJMrp8qRCv8gYiHbxTaSOpj4sNPjtUTVIJqs/exec";
+var SHEET_ID = "1ytkQiI_Tui-8Xx6HQH3RggcwCs1EM-TlGd_f3lT1g7c";
 
 // ---------------------------
 // رتب ونقاط
