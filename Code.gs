@@ -208,6 +208,10 @@ function updatePrayerStreak(islamicDateStr, props, chatId) {
         props.setProperty('MAX_PRAYER_STREAK', streak.toString());
       }
       
+      if (streak === 3) addMedal("وسام الالتزام الحديدي 🕌", chatId);
+      if (streak === 7) addMedal("نجمة الفجر 🌟", chatId);
+      if (streak === 30) addMedal("درع المصلين الأسطوري 🕋", chatId);
+      
       sendMessage(chatId, "🌟 **إنجاز عظيم!** لقد أكملت جميع الصلوات الخمس لليوم. ستريك الصلوات الحالي: *" + streak + "* يوم متتالي 🦅");
     }
   }
@@ -353,6 +357,12 @@ function handleMessage(message) {
     if (vaultArr.length > 50) vaultArr.shift(); 
     props.setProperty('VICTORY_VAULT', JSON.stringify(vaultArr));
     props.setProperty('AWAITING_VICTORY', "false");
+    
+    var totalVic = parseInt(props.getProperty('TOTAL_VICTORIES') || "0") + 1;
+    props.setProperty('TOTAL_VICTORIES', totalVic.toString());
+    
+    if (totalVic === 10) addMedal("شارة المقاوم الصامت ⚔️", chatId);
+    if (totalVic === 50) addMedal("قلادة المنتصر الأكبر 🏆", chatId);
     
     var countKey = 'VICTORY_COUNT_' + islamicDateStr;
     var vCount = parseInt(props.getProperty(countKey) || "0");
@@ -1043,9 +1053,12 @@ function checkAndRemind() {
       sendMessage(chatId, "فحص مفاجئ من القيادة 🚨: تقرير الأداء بيقول إنك صامد بقالك " + days + " يوم. تم إضافة 50 نقطة مكافأة الصمود! رصيدك: " + newP);
       props.setProperty(dailyKey, "true");
       
+      if (days >= 1) addMedal("شارة المحارب الأولى 🎖️", chatId);
+      if (days >= 3) addMedal("وسام الإرادة الصلبة 🛡️", chatId);
       if (days >= 7) addMedal("نجمة الأسبوع النحاسية 🥉", chatId);
       if (days >= 30) addMedal("درع الشهر الفضي 🥈", chatId);
       if (days >= 90) addMedal("تاج الصمود الذهبي 🥇", chatId);
+      if (days >= 180) addMedal("وسام النقاء المطلق 💎", chatId);
     }
   }
 }
