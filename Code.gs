@@ -249,7 +249,7 @@ function updatePrayerStreak(islamicDateStr, props, chatId) {
       }
       
       sendMessage(chatId, msg);
-      checkHiddenAchievements(props, chatId, p);
+      checkHiddenAchievements(props, chatId, getPoints());
     }
   }
 }
@@ -561,6 +561,17 @@ function handleMessage(message) {
       sendMenuCustom(chatId, "مهمتك الخاصة: " + m + "\n\nلو خلصتها دوس على (تم إنجاز المهمة ✅).", tempKeyboard);
     }
   } 
+  else if (text === "أنجزت التحدي ✅") {
+    if (props.getProperty('JOKER_ACTIVE') === "true") {
+      props.setProperty('JOKER_ACTIVE', "false");
+      var newP = addPoints(150);
+      addMedal("🃏 وسام الجوكر النادر", chatId);
+      sendMessage(chatId, "🃏 **عاش وحش المعسكر!** تم إنجاز التحدي بنجاح.\nتمت إضافة 150 نقطة لرصيدك والوسام النادر! 🏆\nالرصيد الجديد: " + newP);
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
+    } else {
+      sendMenu(chatId, "التحدي انتهى أو غير متاح حالياً.", getKeyboard(p));
+    }
+  }
   else if (text === "تم إنجاز المهمة ✅") {
     if (props.getProperty('PENDING_MISSION_' + islamicDateStr) === "true") {
       props.setProperty('PENDING_MISSION_' + islamicDateStr, "false");
@@ -608,11 +619,8 @@ function handleMessage(message) {
   }
   else if (text === "قبول تحدي الجوكر 🃏") {
     if (props.getProperty('JOKER_ACTIVE') === "true") {
-      props.setProperty('JOKER_ACTIVE', "false");
-      var newP = addPoints(150);
-      addMedal("🃏 وسام الجوكر الخفي", chatId);
-      sendMessage(chatId, "🔥 **أنت حقاً وحش!** تم قبول التحدي بنجاح.\nحصلت على 150 نقطة ووسام الجوكر الخفي! 🃏\nرصيدك الحالي: " + newP);
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
+      sendMessage(chatId, "التحدي نشط! لو أنجزته دوس على (أنجزت التحدي ✅) عشان تاخد الجايزة.");
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
     } else {
       sendMenu(chatId, "عفواً، التحدي غير متاح الآن.", getKeyboard(p));
     }
@@ -632,12 +640,8 @@ function handleMessage(message) {
       sendMessage(chatId, "الخزينة لسه فاضية! سجل انتصاراتك الأول عشان تلاقيها وقت الزنقة.");
     } else {
       var vaultArr = JSON.parse(vault);
-      var msgs = "🔥 **خزينة الانتصارات الخاصة بك:**\n\n";
-      for (var i = 0; i < vaultArr.length; i++) {
-        msgs += "*" + vaultArr[i] + "*\n\n";
-      }
-      msgs += "فاكر لما قاومت وكنت قوي؟ إنت تقدر تعملها تاني دلوقتي! 🦅";
-      sendMessage(chatId, msgs);
+      var randomVic = vaultArr[Math.floor(Math.random() * vaultArr.length)];
+      sendMessage(chatId, "🔥 رسالة من الماضي:\n\n*" + randomVic + "*\n\nفاكر لما قاومت وكنت قوي؟ إنت تقدر تعملها تاني دلوقتي! 🦅");
     }
   }
   else if (text.indexOf("/addvic ") === 0) {
@@ -817,7 +821,7 @@ function handleMessage(message) {
       if (shameArr.length > 50) shameArr.shift(); 
       props.setProperty('WALL_OF_SHAME', JSON.stringify(shameArr));
       
-      sendMessage(chatId, "🛡️ تفعيل درع الحماية! 🛡️\n\nالدرع اتكسرت وامتصت الضربة. الستريك والنقاط بتاعتك في أمان تام.\nعندك حماية إضافية من خصم التفتيش لأول 3 أيام.\nمتبقي لك دروع: " + (shields - 1));
+      sendMessage(chatId, "🛡️ تفعيل درع الحماية! 🛡️\n\nالدرع اتكسرت وامتصت الضربة. الستريك والنقاط في أمان بفضل الدرع.\nعندك حماية إضافية من خصم التفتيش لأول 3 أيام.\nمتبقي لك دروع: " + (shields - 1));
       sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(getPoints()));
     } else {
       var shame = props.getProperty('WALL_OF_SHAME');
@@ -835,7 +839,7 @@ function handleMessage(message) {
       props.setProperty('POINTS', "0");
       props.setProperty('SHIELD_ACTIVE', "false");
       
-      sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺\nأنت الآن في فترة الاستعادة (" + recoveryPeriod + " يوم) بدون حماية. كلما ارتفعت أكثر كان سقوطك أقسى.");
+      sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺\nأنت الآن في فترة الاستعادة (" + recoveryPeriod + " يوم) بدون حماية.");
       sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(0));
     }
   }
@@ -1063,6 +1067,9 @@ function sendWeeklySummary(chatId, props) {
   
   props.setProperty('WEEKLY_ON_TIME_COUNT', "0");
   props.setProperty('WEEKLY_QADAA_COUNT', "0");
+  var now = new Date();
+  var resetTime = now.getTime();
+  props.setProperty('LAST_WEEKLY_RESET_DATE', resetTime.toString());
 }
 
 function sendMorningVerse(chatId) {
@@ -1132,6 +1139,15 @@ function checkAndRemind() {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
+    
+    var lastReset = parseInt(props.getProperty('LAST_WEEKLY_RESET_DATE') || "0");
+    var nowTime = now.getTime();
+    var currentDayOfWeek = Utilities.formatDate(now, "GMT+3", "u");
+    if (currentDayOfWeek === "5" && (nowTime - lastReset) > 6 * 24 * 60 * 60 * 1000) {
+      props.setProperty('WEEKLY_ON_TIME_COUNT', "0");
+      props.setProperty('WEEKLY_QADAA_COUNT', "0");
+      props.setProperty('LAST_WEEKLY_RESET_DATE', nowTime.toString());
+    }
     var props = PropertiesService.getScriptProperties();
     var chatId = props.getProperty('ADMIN_CHAT_ID');
     if (!chatId) chatId = props.getProperty('CHAT_ID'); 
@@ -1389,11 +1405,20 @@ function checkAndRemind() {
       if (currentAbs >= 540 && currentAbs <= 1260) { // بين 9 صباحاً و 9 مساءً
         if (Math.random() < 0.05) {
           props.setProperty('JOKER_ACTIVE', "true");
+          var challenges = [
+            "قل سبحان الله وبحمده 100 مرة",
+            "اقرأ آخر آيتين من سورة البقرة",
+            "صلِّ على النبي ﷺ 50 مرة",
+            "استغفر الله 100 مرة"
+          ];
+          var randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+          props.setProperty('JOKER_TASK', randomChallenge);
+          
           var jokerKeys = [
-            [{"text": "قبول تحدي الجوكر 🃏"}],
+            [{"text": "أنجزت التحدي ✅"}],
             [{"text": "تجاهل ❌"}]
           ];
-          sendMenuCustom(chatId, "🃏 **تحدي الجوكر ظهر فجأة!**\n\nأمامك فرصة للحصول على 150 نقطة ووسام نادر لو قبلت التحدي وأنجزته الآن. هل تقبل؟", jokerKeys);
+          sendMenuCustom(chatId, "🃏 **تحدي الجوكر ظهر فجأة!**\n\nالمهمة: *" + randomChallenge + "*\n\nأنجز المهمة دي دلوقتي وبعدين اضغط ✅ عشان تاخد 150 نقطة ووسام.", jokerKeys);
         }
       }
     }
