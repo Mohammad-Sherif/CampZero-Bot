@@ -650,6 +650,22 @@ function handleMessage(message) {
     sendMessage(chatId, "تم إضافة الانتصار بنجاح! 🏆");
     return;
   }
+  else if (text.indexOf("/delvic ") === 0) {
+    var vText = text.replace("/delvic ", "");
+    var vault = props.getProperty('VICTORY_VAULT');
+    if (vault) {
+      var vaultArr = JSON.parse(vault);
+      var newArr = [];
+      for (var i = 0; i < vaultArr.length; i++) {
+        if (vaultArr[i].indexOf(vText) === -1) {
+          newArr.push(vaultArr[i]);
+        }
+      }
+      props.setProperty('VICTORY_VAULT', JSON.stringify(newArr));
+      sendMessage(chatId, "تم مسح الانتصار بنجاح! 🗑️");
+    }
+    return;
+  }
   else if (text === "عملية الأسبوع 📅") {
     if (p < 1001) return;
     
