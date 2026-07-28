@@ -561,6 +561,17 @@ function handleMessage(message) {
       sendMenuCustom(chatId, "مهمتك الخاصة: " + m + "\n\nلو خلصتها دوس على (تم إنجاز المهمة ✅).", tempKeyboard);
     }
   } 
+  else if (text === "أنجزت التحدي ✅") {
+    if (props.getProperty('JOKER_ACTIVE') === "true") {
+      props.setProperty('JOKER_ACTIVE', "false");
+      var newP = addPoints(150);
+      addMedal("🃏 وسام الجوكر النادر", chatId);
+      sendMessage(chatId, "🃏 **عاش وحش المعسكر!** تم إنجاز التحدي بنجاح.\nتمت إضافة 150 نقطة لرصيدك والوسام النادر! 🏆\nالرصيد الجديد: " + newP);
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
+    } else {
+      sendMenu(chatId, "التحدي انتهى أو غير متاح حالياً.", getKeyboard(p));
+    }
+  }
   else if (text === "تم إنجاز المهمة ✅") {
     if (props.getProperty('PENDING_MISSION_' + islamicDateStr) === "true") {
       props.setProperty('PENDING_MISSION_' + islamicDateStr, "false");
@@ -606,6 +617,7 @@ function handleMessage(message) {
     props.setProperty('AWAITING_VICTORY', "false");
     sendMenu(chatId, "تم الإلغاء.", getKeyboard(p));
   }
+
   else if (text === "استمد طاقة 🔥") {
     var vault = props.getProperty('VICTORY_VAULT');
     if (!vault || vault === "[]") {
@@ -676,21 +688,7 @@ function handleMessage(message) {
       sendMenuCustom(chatId, "📅 عملية الأسبوع:\n\n" + currentOp + "\n\nالمكافأة: 200 نقطة ووسام نادر.", keys);
     }
   }
-  else if (text === "تم إنجاز العملية الأسبوعية ✅") {
-    var opStatus = props.getProperty('WEEKLY_OP_STATUS');
-    if (opStatus === "DONE") {
-      sendMessage(chatId, "أنت أنجزت العملية من قبل يا بطل! 🦅");
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
-    } else if (opStatus === "PENDING") {
-      props.setProperty('WEEKLY_OP_STATUS', "DONE");
-      var newP = addPoints(200);
-      addMedal("🎖️ وسام العملية الأسبوعية", chatId);
-      sendMessage(chatId, "عاش يا أسطورة! 200 نقطة ووسام العملية الأسبوعية تم منحهم لك. رصيدك: " + newP);
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
-    } else {
-      sendMenu(chatId, "مفيش عملية نشطة دلوقتي.", getKeyboard(p));
-    }
-  }
+
   else if (text === "ملف الوحش 🦍") {
     var details = getStreakDetails();
     var days = getStreakDays();
