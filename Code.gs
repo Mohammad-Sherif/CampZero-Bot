@@ -632,9 +632,23 @@ function handleMessage(message) {
       sendMessage(chatId, "الخزينة لسه فاضية! سجل انتصاراتك الأول عشان تلاقيها وقت الزنقة.");
     } else {
       var vaultArr = JSON.parse(vault);
-      var randomVic = vaultArr[Math.floor(Math.random() * vaultArr.length)];
-      sendMessage(chatId, "🔥 رسالة من الماضي:\n\n*" + randomVic + "*\n\nفاكر لما قاومت وكنت قوي؟ إنت تقدر تعملها تاني دلوقتي! 🦅");
+      var msgs = "🔥 **خزينة الانتصارات الخاصة بك:**\n\n";
+      for (var i = 0; i < vaultArr.length; i++) {
+        msgs += "*" + vaultArr[i] + "*\n\n";
+      }
+      msgs += "فاكر لما قاومت وكنت قوي؟ إنت تقدر تعملها تاني دلوقتي! 🦅";
+      sendMessage(chatId, msgs);
     }
+  }
+  else if (text.indexOf("/addvic ") === 0) {
+    var vText = text.replace("/addvic ", "");
+    var vault = props.getProperty('VICTORY_VAULT');
+    if (!vault) vault = "[]";
+    var vaultArr = JSON.parse(vault);
+    vaultArr.unshift(vText);
+    props.setProperty('VICTORY_VAULT', JSON.stringify(vaultArr));
+    sendMessage(chatId, "تم إضافة الانتصار بنجاح! 🏆");
+    return;
   }
   else if (text === "عملية الأسبوع 📅") {
     if (p < 1001) return;
@@ -797,11 +811,15 @@ function handleMessage(message) {
       if (shameArr.length > 50) shameArr.shift(); 
       props.setProperty('WALL_OF_SHAME', JSON.stringify(shameArr));
       
+      var daysBeforeRelapse = getStreakDays();
+      var recoveryPeriod = Math.max(1, daysBeforeRelapse); // Dynamic, no max limit
+      props.setProperty('RECOVERY_PERIOD', recoveryPeriod.toString());
+      
       props.setProperty('LAST_RESET_DATE', relapseTime.toString());
       props.setProperty('POINTS', "0");
       props.setProperty('SHIELD_ACTIVE', "false");
       
-      sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺\nأنت الآن في فترة الاستعادة (7 أيام) بدون حماية.");
+      sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺\nأنت الآن في فترة الاستعادة (" + recoveryPeriod + " يوم) بدون حماية. كلما ارتفعت أكثر كان سقوطك أقسى.");
       sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(0));
     }
   }
@@ -951,8 +969,10 @@ function getStreakDays() {
 }
 
 function getStreakMultiplier() {
+  var props = PropertiesService.getScriptProperties();
+  var recoveryPeriod = parseInt(props.getProperty('RECOVERY_PERIOD') || "7");
   var days = getStreakDays();
-  if (days < 7) return 2.0;     // 🔥 وضع الاستعادة (تشجيع)
+  if (days < recoveryPeriod) return 2.0;     // 🔥 وضع الاستعادة (تشجيع)
   if (days >= 90) return 3.0;   // 🌌 أسطوري
   if (days >= 60) return 2.5;   // 💎 محترف
   if (days >= 30) return 2.0;   // 🏆 متقدم
@@ -961,9 +981,11 @@ function getStreakMultiplier() {
 }
 
 function getMultiplierLabel() {
+  var props = PropertiesService.getScriptProperties();
+  var recoveryPeriod = parseInt(props.getProperty('RECOVERY_PERIOD') || "7");
   var days = getStreakDays();
   var m = getStreakMultiplier();
-  if (days < 7) return "🔥 وضع الاستعادة (×2)";
+  if (days < recoveryPeriod) return "🔥 وضع الاستعادة (×2)";
   if (m >= 3.0) return "🌌 أسطوري (×3)";
   if (m >= 2.5) return "💎 محترف (×2.5)";
   if (m >= 2.0) return "🏆 متقدم (×2)";
@@ -977,10 +999,14 @@ function resetStreak() {
 }
 
 function getStreakMessage(days) {
+  var props = PropertiesService.getScriptProperties();
+  var recoveryPeriod = parseInt(props.getProperty('RECOVERY_PERIOD') || "7");
+  
   if (days === 0) return "ضربة البداية يا بطل! متتراجعش ⚔️";
   if (days === 1) return "أول 24 ساعة عدت بنجاح! كمل طحن 🦍";
   if (days === 2) return "يومين من السيطرة! استمر 🛡️";
   if (days === 3) return "تلات أيام من القوة! دوس كمان 🔥";
+  if (days === recoveryPeriod) return "فترة الاستعادة انتهت! رجعت وحش كاسر 🐺";
   if (days === 7) return "أسبوع كامل! 7 أيام من السيطرة على نفسك 🏆";
   if (days === 10) return "10 أيام من النقاء والتركيز. عاش يا بطل 🦅";
   if (days === 14) return "أسبوعين من الصمود! مفيش رجوع لورا ⏳";
@@ -1258,9 +1284,11 @@ function checkAndRemind() {
       var finalMsg = "";
       var pointsChange = 0;
       
-      // ============ وضع الاستعادة (أيام 0-6) ============
-      if (days < 7) {
-        var rawPenalty = Math.round(25 * (1 - days / 7));
+      var recoveryPeriod = parseInt(props.getProperty('RECOVERY_PERIOD') || "7");
+
+      // ============ وضع الاستعادة ============
+      if (days < recoveryPeriod) {
+        var rawPenalty = Math.round(25 * (1 - days / recoveryPeriod));
         var prayerPenalty = Math.max(0, -prayerComponent); 
         var totalPenalty = rawPenalty + prayerPenalty;
         
@@ -1277,32 +1305,32 @@ function checkAndRemind() {
         } else {
           pointsChange = -totalPenalty;
           finalMsg = "تفتيش القيادة 🚨\n\n" +
-            "📍 يوم الاستعادة: " + days + " من 7\n" +
+            "📍 يوم الاستعادة: " + days + " من " + recoveryPeriod + "\n" +
             "🔻 خصم صمود: " + rawPenalty + " نقطة\n";
           if (prayerPenalty > 0) {
             finalMsg += "🔻 خصم صلوات: " + prayerPenalty + " نقطة\n";
             finalMsg += prayerReport + "\n";
           }
           
-          var remainingDays = 7 - days;
-          var nextPenalty = Math.round(25 * (1 - (days + 1) / 7));
+          var remainingDays = recoveryPeriod - days;
+          var nextPenalty = Math.round(25 * (1 - (days + 1) / recoveryPeriod));
           finalMsg += "\n💡 العقوبة بكرة: " + nextPenalty + " نقطة (بدل " + rawPenalty + ")\n";
           finalMsg += "🏁 بعد " + remainingDays + " " + (remainingDays === 1 ? "يوم" : "أيام") + 
                       " تنتهي فترة الاستعادة!\n\n" +
                       "خصم اليوم: " + totalPenalty + " نقطة ⚔️";
         }
       }
-      // ============ اليوم السابع ============
-      else if (days === 7) {
+      // ============ انتهاء فترة الاستعادة ============
+      else if (days === recoveryPeriod) {
         var bonus = 50;
         pointsChange = bonus;
-        finalMsg = "🔥 أسبوع استعادة مكتمل! 🔥\n\n" +
-          "يا وحش! قاومت لمدة 7 أيام كاملة رغم الخصومات!\n" +
+        finalMsg = "🔥 فترة استعادة مكتملة! 🔥\n\n" +
+          "يا وحش! قاومت لمدة " + recoveryPeriod + " يوم كاملة رغم الخصومات!\n" +
           "فترة الاستعادة انتهت. من دلوقتي التفتيش هيزيد عليك مش يخصم!\n\n" +
           "مكافأة العودة للقتال: +" + bonus + " نقطة 🏆";
         addMedal("🔥 وسام العائد الأقوى", chatId);
       }
-      // ============ وضع الصمود العادي (أيام 8+) ============
+      // ============ وضع الصمود العادي ============
       else {
         var baseBonus = Math.min(100, 20 + Math.floor(days / 7) * 5);
         var bonusWithPrayers = baseBonus + prayerComponent;
