@@ -561,17 +561,6 @@ function handleMessage(message) {
       sendMenuCustom(chatId, "مهمتك الخاصة: " + m + "\n\nلو خلصتها دوس على (تم إنجاز المهمة ✅).", tempKeyboard);
     }
   } 
-  else if (text === "أنجزت التحدي ✅") {
-    if (props.getProperty('JOKER_ACTIVE') === "true") {
-      props.setProperty('JOKER_ACTIVE', "false");
-      var newP = addPoints(150);
-      addMedal("🃏 وسام الجوكر النادر", chatId);
-      sendMessage(chatId, "🃏 **عاش وحش المعسكر!** تم إنجاز التحدي بنجاح.\nتمت إضافة 150 نقطة لرصيدك والوسام النادر! 🏆\nالرصيد الجديد: " + newP);
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(newP));
-    } else {
-      sendMenu(chatId, "التحدي انتهى أو غير متاح حالياً.", getKeyboard(p));
-    }
-  }
   else if (text === "تم إنجاز المهمة ✅") {
     if (props.getProperty('PENDING_MISSION_' + islamicDateStr) === "true") {
       props.setProperty('PENDING_MISSION_' + islamicDateStr, "false");
@@ -617,22 +606,6 @@ function handleMessage(message) {
     props.setProperty('AWAITING_VICTORY', "false");
     sendMenu(chatId, "تم الإلغاء.", getKeyboard(p));
   }
-  else if (text === "قبول تحدي الجوكر 🃏") {
-    if (props.getProperty('JOKER_ACTIVE') === "true") {
-      sendMessage(chatId, "التحدي نشط! لو أنجزته دوس على (أنجزت التحدي ✅) عشان تاخد الجايزة.");
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
-    } else {
-      sendMenu(chatId, "عفواً، التحدي غير متاح الآن.", getKeyboard(p));
-    }
-  }
-  else if (text === "تجاهل ❌") {
-    if (props.getProperty('JOKER_ACTIVE') === "true") {
-      props.setProperty('JOKER_ACTIVE', "false");
-      sendMessage(chatId, "تم رفض التحدي. الفرص الكبيرة لا تأتي دائماً يا بطل.");
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
-    } else {
-      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
-    }
   }
   else if (text === "استمد طاقة 🔥") {
     var vault = props.getProperty('VICTORY_VAULT');
@@ -1139,6 +1112,8 @@ function checkAndRemind() {
   var lock = LockService.getScriptLock();
   try {
     lock.waitLock(10000);
+    var props = PropertiesService.getScriptProperties();
+    var now = new Date();
     
     var lastReset = parseInt(props.getProperty('LAST_WEEKLY_RESET_DATE') || "0");
     var nowTime = now.getTime();
@@ -1148,7 +1123,6 @@ function checkAndRemind() {
       props.setProperty('WEEKLY_QADAA_COUNT', "0");
       props.setProperty('LAST_WEEKLY_RESET_DATE', nowTime.toString());
     }
-    var props = PropertiesService.getScriptProperties();
     var chatId = props.getProperty('ADMIN_CHAT_ID');
     if (!chatId) chatId = props.getProperty('CHAT_ID'); 
     if (!chatId) return; 
