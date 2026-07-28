@@ -606,7 +606,6 @@ function handleMessage(message) {
     props.setProperty('AWAITING_VICTORY', "false");
     sendMenu(chatId, "تم الإلغاء.", getKeyboard(p));
   }
-  }
   else if (text === "استمد طاقة 🔥") {
     var vault = props.getProperty('VICTORY_VAULT');
     if (!vault || vault === "[]") {
