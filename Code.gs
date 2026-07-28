@@ -572,6 +572,15 @@ function handleMessage(message) {
       sendMenu(chatId, "التحدي انتهى أو غير متاح حالياً.", getKeyboard(p));
     }
   }
+  else if (text === "تجاهل ❌") {
+    if (props.getProperty('JOKER_ACTIVE') === "true") {
+      props.setProperty('JOKER_ACTIVE', "false");
+      sendMessage(chatId, "تم تجاهل التحدي. الفرص الكبيرة لا تأتي دائماً يا بطل 🃏");
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
+    } else {
+      sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(p));
+    }
+  }
   else if (text === "تم إنجاز المهمة ✅") {
     if (props.getProperty('PENDING_MISSION_' + islamicDateStr) === "true") {
       props.setProperty('PENDING_MISSION_' + islamicDateStr, "false");
@@ -1124,7 +1133,7 @@ function checkAndRemind() {
     if (!chatId) chatId = props.getProperty('CHAT_ID'); 
     if (!chatId) return; 
   
-  var now = new Date();
+
   var currentTimeStr = Utilities.formatDate(now, "GMT+3", "HH:mm");
   var currentMinsRaw = parseTimeStr(currentTimeStr);
   
