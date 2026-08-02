@@ -14,7 +14,11 @@ var RANKS = [
   {name: "عقيد 🦅⭐⭐", min: 3501},
   {name: "عميد 🦅⭐⭐⭐", min: 5001},
   {name: "لواء 🦅⚔️", min: 7501},
-  {name: "مشير 🦅⚔️🌿", min: 10000}
+  {name: "مشير 🦅⚔️🌿", min: 10000},
+  {name: "قائد أعلى 👑", min: 15000},
+  {name: "أسطورة حية 🌍👑", min: 25000},
+  {name: "حارس الأمة 🕋👑⚔️", min: 50000},
+  {name: "خالد 💎👑🌿", min: 100000}
 ];
 
 function getRank(points) {
@@ -475,6 +479,7 @@ function handleMessage(message) {
       "/apology — تعويض تقني (مرة واحدة فقط)\n" +
       "/call @username — بعت اتصال صوتي عبر CallMeBot\n" +
       "/mystats — إحصائيات تفصيلية\n" +
+      "/backup — حفظ نسخة احتياطية من بياناتك على Google Sheet\n" +
       "/help — هذه القائمة\n\n" +
       "💡 ملاحظة: بعض الأزرار بتظهر بس لو وصلت حد نقاط معين.";
     sendMessage(chatId, helpText);
@@ -577,6 +582,29 @@ function handleMessage(message) {
     var newP = addPoints(20);
     sendMessage(chatId, "تعويض من القيادة عن الخطأ التقني 🎖️: تم إرجاع الـ 20 نقطة. رصيدك الحالي: " + newP);
     sendMenu(chatId, "القائمة الرئيسية 👇", getKeyboard(newP));
+    return;
+  }
+  
+  if (text === "/backup") {
+    try {
+      var ss = SpreadsheetApp.openById(SHEET_ID);
+      var backupSheet = ss.getSheetByName("Backup");
+      if (!backupSheet) {
+        backupSheet = ss.insertSheet("Backup");
+      }
+      backupSheet.clear();
+      backupSheet.appendRow(["المفتاح", "القيمة", "تاريخ النسخ"]);
+      
+      var allProps = props.getProperties();
+      var propKeys = Object.keys(allProps).sort();
+      var dateNow = Utilities.formatDate(new Date(), "GMT+3", "yyyy-MM-dd HH:mm:ss");
+      for (var bi = 0; bi < propKeys.length; bi++) {
+        backupSheet.appendRow([propKeys[bi], allProps[propKeys[bi]], dateNow]);
+      }
+      sendMessage(chatId, "✅ *تم حفظ نسخة احتياطية بنجاح!*\n\nتم تصدير " + propKeys.length + " سجل إلى ورقة Backup في Google Sheets.\nتاريخ النسخ: " + dateNow);
+    } catch (e) {
+      sendMessage(chatId, "❌ حصل خطأ في النسخ الاحتياطي: " + e.message);
+    }
     return;
   }
   
@@ -768,7 +796,13 @@ function handleMessage(message) {
         "اقرأ سورة الملك (المنجية من عذاب القبر) الليلة.",
         "اقرأ سورة الواقعة بنية الرزق والتوفيق.",
         "اقرأ 5 صفحات من القرآن الكريم بتركيز.",
-        "سبح الله 100 مرة (سبحان الله وبحمده)."
+        "سبح الله 100 مرة (سبحان الله وبحمده).",
+        "اقرأ سورة الكهف كاملة.",
+        "صلِّ ركعتين قيام ليل الليلة قبل ما تنام.",
+        "تصدق بأي مبلغ النهارده (ولو جنيه واحد).",
+        "اكتب 3 نعم ربنا أنعم عليك بيها النهارده وحمده عليها.",
+        "قل: لا حول ولا قوة إلا بالله 100 مرة.",
+        "اقرأ أذكار الصباح والمساء كاملة النهارده."
       ];
       var m = missions[Math.floor(Math.random()*missions.length)];
       props.setProperty('PENDING_MISSION_' + islamicDateStr, "true");
@@ -889,7 +923,12 @@ function handleMessage(message) {
       "قراءة سورة البقرة كاملة في ركعتين قيام ليل هذا الأسبوع.",
       "حفظ 5 آيات جديدة ومراجعتها يومياً.",
       "الاستيقاظ قبل الفجر بنصف ساعة يومياً هذا الأسبوع.",
-      "الصدقة ولو بمبلغ بسيط مرتين هذا الأسبوع."
+      "الصدقة ولو بمبلغ بسيط مرتين هذا الأسبوع.",
+      "صلاة الضحى يومياً هذا الأسبوع (ركعتين بعد الشروق بـ 15 دقيقة).",
+      "قراءة جزء كامل من القرآن مقسم على أيام الأسبوع.",
+      "ختم أذكار الصباح والمساء كل يوم هذا الأسبوع.",
+      "قيام ليل 3 ليالي هذا الأسبوع (ولو ركعتين).",
+      "غض البصر تماماً عن كل المحتوى السيء لمدة أسبوع كامل."
     ];
     
     if (savedWeek !== currentWeek) {
@@ -936,12 +975,14 @@ function handleMessage(message) {
   }
   else if (text === "سبحان الله × 33" || text === "الحمد لله × 33" || text === "الله أكبر × 33" || text === "صلاة على النبي × 100") {
     var dhikrCount = parseInt(props.getProperty('DHIKR_COUNT_' + islamicDateStr) || "0");
+    var totalDhikr = parseInt(props.getProperty('TOTAL_DHIKR') || "0");
     if (dhikrCount >= 3) {
-      sendMessage(chatId, "لقد أتممت الحد الأقصى من النقاط للأذكار اليوم (3 جلسات). تقبل الله منك! ✨");
+      sendMessage(chatId, "لقد أتممت الحد الأقصى من النقاط للأذكار اليوم (3 جلسات). تقبل الله منك! ✨\nإجمالي جلسات الذكر في مسيرتك: " + totalDhikr + " جلسة 📿");
     } else {
       props.setProperty('DHIKR_COUNT_' + islamicDateStr, (dhikrCount + 1).toString());
+      props.setProperty('TOTAL_DHIKR', (totalDhikr + 1).toString());
       addPoints(5, "جلسة ذكر: " + text);
-      sendMessage(chatId, "أحسنت! 📿 تم تسجيل الجلسة وإضافة 5 نقاط.");
+      sendMessage(chatId, "أحسنت! 📿 تم تسجيل الجلسة وإضافة 5 نقاط.\nإجمالي جلسات الذكر: " + (totalDhikr + 1) + " جلسة");
     }
     sendMenu(chatId, "القائمة الرئيسية 👇", getKeyboard(getPoints()));
   }
@@ -1884,7 +1925,18 @@ function checkAndRemind() {
             "قل سبحان الله وبحمده 100 مرة",
             "اقرأ آخر آيتين من سورة البقرة",
             "صلِّ على النبي ﷺ 50 مرة",
-            "استغفر الله 100 مرة"
+            "استغفر الله 100 مرة",
+            "اقرأ آية الكرسي 7 مرات",
+            "قل: لا إله إلا الله وحده لا شريك له 100 مرة",
+            "اقرأ سورة الإخلاص 10 مرات",
+            "اقرأ المعوذتين 7 مرات",
+            "صلِّ ركعتي شكر لله دلوقتي",
+            "اكتب 5 حاجات شاكر لله عليها وابعتهم هنا",
+            "قل: حسبي الله لا إله إلا هو عليه توكلت 7 مرات",
+            "اقرأ سورة يس كاملة",
+            "قل: اللهم إني أعوذ بك من الهم والحزن 40 مرة",
+            "اعمل سجدة شكر لله دلوقتي على نعمة الصمود",
+            "تصدق بأي مبلغ في الساعة الجاية عشان تثبت الجوكر"
           ];
           var randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
           props.setProperty('JOKER_TASK', randomChallenge);
@@ -1904,4 +1956,103 @@ function checkAndRemind() {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ---------------------------
+// Property Cleanup (run weekly)
+// ---------------------------
+function cleanupOldProperties() {
+  var props = PropertiesService.getScriptProperties();
+  var allProps = props.getProperties();
+  var keys = Object.keys(allProps);
+  var now = new Date();
+  var cutoffDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // 14 days ago
+  var cutoffStr = Utilities.formatDate(cutoffDate, "GMT+3", "yyyy-MM-dd");
+  var deleted = 0;
+  
+  var dailyPrefixes = [
+    'PRAYED_', 'PRAYER_PTS_', 'SLEEP_EXEMPT_', 'DHIKR_COUNT_',
+    'FASTING_DONE_', 'TARAWIH_DONE_', 'MISSION_DONE_', 'PENDING_MISSION_',
+    'DAILY_CHECKIN_', 'RANDOM_TIME_', 'FIX_USED_', 'VICTORY_COUNT_',
+    'S_THIRDNIGHT_', 'FAJR_CALL_1_', 'FAJR_CALL_2_', 'FAJR_CALL_3_',
+    'EMERGENCY_30', 'EMERGENCY_15', 'EMERGENCY_5', 'ATHAN_0',
+    'NORMAL_20', 'POST_10', 'PUNISH_QADAA', 'SUHOOR_REMINDER', 'IFTAR_10'
+  ];
+  
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    for (var j = 0; j < dailyPrefixes.length; j++) {
+      if (key.indexOf(dailyPrefixes[j]) === 0) {
+        // Extract date from key
+        var dateMatch = key.match(/(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch && dateMatch[1] < cutoffStr) {
+          props.deleteProperty(key);
+          deleted++;
+        }
+        break;
+      }
+    }
+  }
+  
+  Logger.log("Cleanup: deleted " + deleted + " old properties. Remaining: " + (keys.length - deleted));
+}
+
+// ---------------------------
+// Monthly Report
+// ---------------------------
+function sendMonthlyReport() {
+  var props = PropertiesService.getScriptProperties();
+  var chatId = props.getProperty('CHAT_ID');
+  if (!chatId) return;
+  
+  var now = new Date();
+  var currentDay = parseInt(Utilities.formatDate(now, "GMT+3", "d"));
+  if (currentDay !== 1) return; // Only send on the 1st of each month
+  
+  var monthKey = 'MONTHLY_REPORT_' + Utilities.formatDate(now, "GMT+3", "yyyy-MM");
+  if (props.getProperty(monthKey)) return; // Already sent
+  props.setProperty(monthKey, "true");
+  
+  var p = getPoints();
+  var rank = getRank(p);
+  var days = getStreakDays();
+  var prayerStreak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
+  var pb = parseInt(props.getProperty('PERSONAL_BEST_STREAK') || "0");
+  var fajrCount = parseInt(props.getProperty('FAJR_ONTIME_COUNT') || "0");
+  var totalVic = parseInt(props.getProperty('TOTAL_VICTORIES') || "0");
+  var totalDhikr = parseInt(props.getProperty('TOTAL_DHIKR') || "0");
+  var shields = parseInt(props.getProperty('SHIELDS') || "0");
+  var shameArr = safeParse(props.getProperty('WALL_OF_SHAME'), []);
+  var medalsArr = safeParse(props.getProperty('MY_MEDALS'), []);
+  var fCount = parseInt(props.getProperty('FASTING_COUNT') || "0");
+  
+  var lastMonth = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  var monthName = Utilities.formatDate(lastMonth, "GMT+3", "MMMM yyyy");
+  
+  var report = "━━━━━━━━━━━━━━━━\n";
+  report += "📊 *التقرير الشهري — " + monthName + "*\n";
+  report += "━━━━━━━━━━━━━━━━\n\n";
+  report += "🎖️ الرتبة: " + rank + "\n";
+  report += "💎 النقاط: " + p + "\n";
+  report += "🔥 أيام الصمود: " + days + " يوم\n";
+  report += "👑 أعلى صمود (PB): " + pb + " يوم\n";
+  report += "🕌 ستريك الصلوات: " + prayerStreak + " يوم\n";
+  report += "🌅 فجر في وقته: " + fajrCount + " مرة\n";
+  report += "🛡️ الدروع: " + shields + "/3\n";
+  report += "🏆 انتصارات: " + totalVic + "\n";
+  report += "📿 جلسات ذكر: " + totalDhikr + "\n";
+  if (fCount > 0) report += "🌙 صيام نافلة: " + fCount + " أيام\n";
+  report += "🎖️ أوسمة مكتسبة: " + medalsArr.length + "/" + Object.keys(MEDALS_DB).length + "\n";
+  report += "📉 السقطات الكلية: " + shameArr.length + "\n";
+  report += "\n━━━━━━━━━━━━━━━━\n";
+  
+  if (days >= 30) {
+    report += "🦅 *أنت تتحرك بثبات. كمل.*";
+  } else if (days >= 7) {
+    report += "⚔️ *أسبوع+ من الصمود. القيادة فخورة.*";
+  } else {
+    report += "💪 *شهر جديد. ابدأ قوي.*";
+  }
+  
+  sendMessage(chatId, report);
 }
