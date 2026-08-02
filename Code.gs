@@ -608,6 +608,35 @@ function handleMessage(message) {
     return;
   }
   
+  if (text === "/restore") {
+    try {
+      var ss = SpreadsheetApp.openById(SHEET_ID);
+      var backupSheet = ss.getSheetByName("Backup");
+      if (!backupSheet) {
+        sendMessage(chatId, "❌ مفيش ورقة Backup موجودة! اعمل /backup الأول.");
+        return;
+      }
+      var data = backupSheet.getDataRange().getValues();
+      if (data.length <= 1) {
+        sendMessage(chatId, "❌ ورقة الـ Backup فاضية!");
+        return;
+      }
+      var restored = 0;
+      for (var ri = 1; ri < data.length; ri++) {
+        var key = data[ri][0];
+        var val = data[ri][1];
+        if (key && val !== undefined && val !== null) {
+          props.setProperty(key.toString(), val.toString());
+          restored++;
+        }
+      }
+      sendMessage(chatId, "✅ *تم استعادة البيانات بنجاح!*\n\nتم استيراد " + restored + " سجل من ورقة Backup.\nالبيانات رجعت زي ما كانت وقت النسخ الاحتياطي. 🛡️");
+    } catch (e) {
+      sendMessage(chatId, "❌ حصل خطأ في الاستعادة: " + e.message);
+    }
+    return;
+  }
+  
   if (text.indexOf("/call") === 0) {
     var parts = text.split(" ");
     if (parts.length < 2) {
