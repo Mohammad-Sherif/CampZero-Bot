@@ -347,18 +347,70 @@ function updatePrayerStreak(islamicDateStr, props, chatId) {
 }
 
 function checkHiddenAchievements(props, chatId, p) {
-  // الضربة الخماسية: لو الستريك = 5 أيام متتالية
   var streak = parseInt(props.getProperty('PRAYER_STREAK') || "0");
-  if (streak === 5) {
-    addMedal("🖐️ الضربة الخماسية", chatId);
+  var days   = getStreakDays();
+
+  // --- الضربة الخماسية ---
+  if (streak === 5) addMedal("🖐️ الضربة الخماسية", chatId);
+
+  // --- مليونير الحسنات ---
+  if (p >= 5000 && !props.getProperty('S_MILLIONAIRE')) {
+    addMedal("💰 مليونير الحسنات", chatId);
+    props.setProperty('S_MILLIONAIRE', "1");
   }
-  // المليونير: أول ما النقاط تتخطى 5000
-  if (p >= 5000) {
-    var hasMedal = props.getProperty('MEDAL_MILLIONAIRE');
-    if (!hasMedal) {
-      addMedal("💰 مليونير الحسنات", chatId);
-      props.setProperty('MEDAL_MILLIONAIRE', "true");
-    }
+
+  // --- الصامد الليلي: صمود 100 يوم ---
+  if (days >= 100 && !props.getProperty('S_100DAYS')) {
+    props.setProperty('S_100DAYS', "1");
+    sendMessage(chatId,
+      "🌑 *حدث غير متوقع...*\n\n" +
+      "السيستم رصد شيئاً لم يره من قبل.\n" +
+      "100 يوم من الصمود المتواصل.\n\n" +
+      "⚡ *[تم فتح ملف سري من القيادة]*\n" +
+      "『 لا يُعطى هذا الوسام إلا لمن تجاوز حاجز المئة. 』\n\n" +
+      "🎖️ وسام *الصامد الليلي* — محفور في سجلات Camp Zero إلى الأبد."
+    );
+  }
+
+  // --- ابن الفجر: 21 يوم فجر في وقته متتالية ---
+  var fajrCount = parseInt(props.getProperty('FAJR_ONTIME_COUNT') || "0");
+  if (fajrCount >= 21 && !props.getProperty('S_FAJR21')) {
+    props.setProperty('S_FAJR21', "1");
+    sendMessage(chatId,
+      "🌅 *رسالة من القيادة العليا...*\n\n" +
+      "منذ 21 يوماً وأنت أول من يصافح النور.\n" +
+      "العلم يقول إن الـ 21 يوم يُشكّل عادة لا تُكسر.\n\n" +
+      "أنت الآن *ابن الفجر*.\n" +
+      "من كان له صلاة الفجر فله النهار كله. 🦅"
+    );
+  }
+
+  // --- التائب الصادق: أول صمود بعد انتكاسة يتجاوز 30 يوم ---
+  var shameCount = safeParse(props.getProperty('WALL_OF_SHAME'), []).length;
+  if (shameCount > 0 && days >= 30 && !props.getProperty('S_TRUE_REPENT')) {
+    props.setProperty('S_TRUE_REPENT', "1");
+    sendMessage(chatId,
+      "🕊️ *إشعار نادر...*\n\n" +
+      "بعد كل انكسار... 30 يوم صمود.\n" +
+      "هذا أصعب بكثير من لم يسقط أصلاً.\n\n" +
+      "『 المؤمن الذي يُذنب ويتوب خير ممن لا يُذنب ويعجب 』\n\n" +
+      "أنت *التائب الصادق*. وسامك مكتوب في مكان أعلى من هذا البوت. 🌿"
+    );
+  }
+
+  // --- وسام الصمت: استخدام البوت 7 أيام متتالية بدون أي خصم يدوي ---
+  var lastPenalty = props.getProperty('LAST_MANUAL_DEDUCT_DATE');
+  var sevenDaysAgo = Utilities.formatDate(new Date(new Date().getTime() - 7*24*60*60*1000), "GMT+3", "yyyy-MM-dd");
+  if (days >= 7 && (!lastPenalty || lastPenalty < sevenDaysAgo) && !props.getProperty('S_SILENCE')) {
+    props.setProperty('S_SILENCE', "1");
+    sendMessage(chatId,
+      "🔇 *كشف سري...*\n\n" +
+      "7 أيام كاملة بدون أي عقوبة أو خصم.\n" +
+      "لا إنذارات. لا سقوط. لا تراجع.\n\n" +
+      "هذه هي القوة الحقيقية — ليست الانتصار المزعوم،\n" +
+      "بل الصمت الثابت اللي ما حدش يراه.\n\n" +
+      "🏅 *وسام الصمت الحديدي* — للذين يعيشون الانضباط بدون تصفيق. ⚔️"
+    );
   }
 }
 
@@ -642,6 +694,21 @@ function handleMessage(message) {
         if (fCount === 10) addMedal("🥈 حارس الفجر الفضي", chatId);
         if (fCount === 30) addMedal("🥇 حارس الفجر الذهبي", chatId);
         if (fCount === 90) addMedal("🌌 أسطورة الفجر", chatId);
+
+        // رسالة الثلث الأخير من الليل
+        var rawHour = parseInt(Utilities.formatDate(new Date(), "GMT+3", "HH"));
+        var rawMin  = parseInt(Utilities.formatDate(new Date(), "GMT+3", "mm"));
+        var totalNowMins = rawHour * 60 + rawMin;
+        if ((totalNowMins >= 180 && totalNowMins <= 225) && !props.getProperty('S_THIRDNIGHT_' + islamicDateStr)) {
+          props.setProperty('S_THIRDNIGHT_' + islamicDateStr, "1");
+          sendMessage(chatId,
+            "🌑 *الثلث الأخير من الليل...*\n\n" +
+            "في هذه اللحظة بالذات، الله ينزل إلى السماء الدنيا.\n" +
+            "يقول: من يدعوني فأستجيب له؟\n\n" +
+            "وأنت كنت مستيقظاً. 🤍\n\n" +
+            "لا يعلم هذا إلا الله وأنت."
+          );
+        }
       }
       
       var extraMsg = "";
@@ -1760,6 +1827,28 @@ function checkAndRemind() {
           sendMessage(chatId, "🏆 رقم شخصي جديد! كسرت أعلى رقم عندك: " + days + " يوم!\nالرقم القديم كان: " + personalBest + " يوم 🎉");
         }
       }
+
+      // يوم خاص جداً
+      if (days === 365 && !props.getProperty('S_YEAR_MSG')) {
+        props.setProperty('S_YEAR_MSG', "1");
+        sendMessage(chatId,
+          "━━━━━━━━━━━━━━━━━\n" +
+          "         🌍  ٣٦٥ يوم\n" +
+          "━━━━━━━━━━━━━━━━━\n\n" +
+          "قبل سنة بالظبط...\n" +
+          "كان في شخص قرر.\n\n" +
+          "مش فاهم كل حاجة.\n" +
+          "مش ضامن إنه يكمل.\n" +
+          "بس قرر.\n\n" +
+          "والشخص ده أنت.\n\n" +
+          "ما قولناكش إنه هيبقى سهل.\n" +
+          "وما كانش سهل.\n\n" +
+          "بس أنت لسه هنا. 🤍\n\n" +
+          "『 وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا 』"
+        );
+      }
+
+      checkHiddenAchievements(props, chatId, newP);
       
       // ============ التحدي الجوكر (Weekly Joker) ============
       if (currentAbs >= 540 && currentAbs <= 1260) { // بين 9 صباحاً و 9 مساءً
