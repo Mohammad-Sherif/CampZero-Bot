@@ -467,7 +467,23 @@ function handleMessage(message) {
   var isEmergency = (props.getProperty('EMERGENCY_MODE') === "true");
   
   if (text === "/start") {
-    sendMenu(chatId, "أهلاً بك في Camp Zero. تم تفعيل نظام المحاسبة العسكرية الصارم. ⚔️", getKeyboard(p));
+    var hour = parseInt(Utilities.formatDate(new Date(), "GMT+3", "HH"));
+    var dayOfWeek = Utilities.formatDate(new Date(), "GMT+3", "u");
+    var greeting = "";
+    if (dayOfWeek === "5") {
+      greeting = "جمعة مباركة يا وحش! 🌿 النهارده الحسنات مضاعفة. استغلها.";
+    } else if (hour >= 3 && hour < 6) {
+      greeting = "صاحي في جوف الليل... الله يراك دلوقتي. 🌙";
+    } else if (hour >= 6 && hour < 12) {
+      greeting = "صباح النصر! ⚘️ يالا نبدأ اليوم بقوة.";
+    } else if (hour >= 12 && hour < 17) {
+      greeting = "نص المعركة. كمل بثبات. ⚔️";
+    } else if (hour >= 17 && hour < 21) {
+      greeting = "قربت تختم يوم تاني بانتصار. 🦅";
+    } else {
+      greeting = "الليل وقت الخطر. خليك صاحي. 🛡️";
+    }
+    sendMenu(chatId, greeting, getKeyboard(p));
     return;
   }
   
@@ -794,7 +810,22 @@ function handleMessage(message) {
         extraMsg += " (✨ بونص الجمعة ×2)";
       }
       
-      sendMessage(chatId, "تم إنجاز صلاة " + text + " بنجاح 🦅! تم إضافة " + finalPoints + " نقطة " + extraMsg + "\nرصيدك الحالي: " + newP);
+      // رسالة خاصة بكل صلاة
+      var prayerFlavor = "";
+      if (actualPrayer === "الفجر") prayerFlavor = " — أول من صافح النور النهارده 🌅";
+      else if (actualPrayer === "الظهر") prayerFlavor = " — وسط المعركة ولسه ثابت ⚔️";
+      else if (actualPrayer === "العصر") prayerFlavor = " — الصلاة الوسطى اللي ربنا وصانا بيها 💫";
+      else if (actualPrayer === "المغرب") prayerFlavor = " — كسرت يوم تاني بانتصار 🌅";
+      else if (actualPrayer === "العشاء") prayerFlavor = " — ختمت يومك صح. نام وأنت منتصر 🌙";
+      
+      // كشف أول صلاة بعد انتكاسة
+      var postRelapseMsg = "";
+      if (props.getProperty('JUST_RELAPSED') === "true") {
+        props.deleteProperty('JUST_RELAPSED');
+        postRelapseMsg = "\n\n💚 دي أول صلاة بعد السقوط. ودي أهم خطوة. اللي بيرجع لله بعد المعصية مش ضعيف، ده محارب حقيقي.";
+      }
+      
+      sendMessage(chatId, "تم إنجاز صلاة " + text + " بنجاح 🦅! تم إضافة " + finalPoints + " نقطة " + extraMsg + prayerFlavor + "\nرصيدك الحالي: " + newP + postRelapseMsg);
       updatePrayerStreak(islamicDateStr, props, chatId);
       sendMenu(chatId, "استعد للي بعدها. الزرار بتاعها هيختفي عشان الكيبورد يفضل رايق.", getKeyboard(newP));
     } else {
@@ -1264,6 +1295,7 @@ function handleMessage(message) {
       props.setProperty('SHIELD_ACTIVE', "false");
       
       sendMessage(chatId, "المحارب الحقيقي بيقع ويقوم أقوى. تم تصفير العداد وتحديث وقت الانتكاسة في سجل السقوط. ارفع سيفك وابدأ القتال من جديد دلوقتي 🐺\nأنت الآن في فترة الاستعادة (" + recoveryPeriod + " يوم) بدون حماية.");
+      props.setProperty('JUST_RELAPSED', "true");
       sendMenu(chatId, "القائمة الرئيسية:", getKeyboard(0));
     }
   }
