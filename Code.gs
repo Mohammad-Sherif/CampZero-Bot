@@ -1,4 +1,4 @@
-var BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
+﻿var BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
 var SCRIPT_URL = "YOUR_WEB_APP_URL_HERE";
 var SHEET_ID = "YOUR_SHEET_ID_HERE";
 
@@ -808,22 +808,19 @@ function handleMessage(message) {
     }
   }
   else if (text === "صندوق الدعم 📦") {
-    if (p < 1001) return; 
+    if (p < 1001) return;
     var newP = addPoints(-100);
     var rewards = [
-      "مقولة سرية: 'الشهوة لحظة، والندم سنين. والانتصار لحظة، والفخر سنين.'",
-      "دعاء مستجاب: 'اللهم يا مقلب القلوب ثبت قلبي على دينك'. رددها دايما.",
-      "مقولة سرية: 'الشيطان بيزينلك المعصية قبلها، وبيسيبك تندم لوحدك بعدها. خليك أذكى منه.'",
-      "وسام جديد: 🛡️ الدرع الفولاذي",
-      "وسام جديد: ⚔️ سيف الحق",
-      "مقولة سرية: 'كل تعب في مقاومة الهوى، بيتبني بيه قصر في الجنة.'"
+      "'الشهوة لحظة، والندم سنين. والانتصار لحظة، والفخر سنين.'",
+      "'اللهم يا مقلب القلوب ثبت قلبي على دينك' — رددها دايماً.",
+      "'الشيطان بيزينلك المعصية قبلها، وبيسيبك تندم لوحدك بعدها. خليك أذكى منه.'",
+      "'كل تعب في مقاومة الهوى، بيتبني بيه قصر في الجنة.'",
+      "'النفس إذا أُعطيت ما تشتهي، طغت. وإذا مُنعت، رجعت.'",
+      "'الاستمرارية أقوى من الكمال. يوم ضعيف ولكن تكمل، أفضل من يوم مثالي ثم تتوقف.'",
+      "'قيمتك ليست في عدد مرات السقوط، بل في عدد مرات القيام.'"
     ];
-    var r = rewards[Math.floor(Math.random()*rewards.length)];
-    if (r.indexOf("وسام جديد") !== -1) {
-      var medal = r.split(": ")[1];
-      addMedal(medal, chatId);
-    }
-    sendMessage(chatId, "🎁 فتحت الصندوق وطلعلك:\n\n*" + r + "*");
+    var r = rewards[Math.floor(Math.random() * rewards.length)];
+    sendMessage(chatId, "🎁 *رسالة من الصندوق:*\n\n" + r);
     sendMenu(chatId, "تم خصم 100 نقطة. رصيدك الحالي: " + newP, getKeyboard(newP));
   }
   else if (text === "خزينة الانتصارات 🏆") {
@@ -994,6 +991,7 @@ function handleMessage(message) {
       sendMessage(chatId, "الرقم غير صحيح! اكتب كلمة 'خصم' وبعدها رقم صحيح. مثال: خصم 50");
     } else {
       addPoints(-amount, "خصم يدوي");
+      props.setProperty('LAST_MANUAL_DEDUCT_DATE', islamicDateStr);
       sendMessage(chatId, "تم خصم " + amount + " نقطة من رصيدك بنجاح ➖. رصيدك الحالي: " + getPoints());
       sendMenu(chatId, "القائمة الرئيسية 👇", getKeyboard(getPoints()));
     }
@@ -1094,18 +1092,29 @@ function handleMessage(message) {
     var hMonth = parseInt(props.getProperty('HIJRI_MONTH') || "0");
     var ramadanGreeting = hMonth === 9 ? "🌙 **رمضان كريم يا وحش! (بونص الصمود مضاعف)**\n\n" : "";
     
-    var profile = "📋 **الملف العسكري (Camp Zero):**\n";
+    var totalVictories = parseInt(props.getProperty('TOTAL_VICTORIES') || "0");
+    var isJokerActive = props.getProperty('JOKER_ACTIVE') === "true";
+    var jokerTask = props.getProperty('JOKER_TASK') || "";
+    var shields = parseInt(props.getProperty('SHIELDS') || "0");
+
+    var profile = "📋 *الملف العسكري — Camp Zero*\n";
+    profile += "━━━━━━━━━━━━━━━\n";
     profile += ramadanGreeting;
-    profile += "الرتبة: " + rank + "\n";
-    profile += "النقاط: " + p + " نقطة\n";
-    profile += "أيام الصمود: " + days + " يوم\n";
+    profile += "🎖️ الرتبة: " + rank + "\n";
+    profile += "💎 النقاط: " + p + " نقطة\n";
+    profile += "🔥 أيام الصمود: " + days + " يوم\n";
     profile += pbText;
-    profile += "مضاعف الصمود: " + getMultiplierLabel() + "\n";
-    profile += "ستريك الصلوات الخمس: " + prayerStreak + " يوم متتالي 🕌\n";
-    if (fCount > 0) profile += "عدد أيام صيام النافلة: " + fCount + " أيام 🌙\n";
-    profile += "📈 التقدم للرتبة التالية:\n" + getNextRankProgress(p) + "\n\n";
-    profile += "**سجل صلوات اليوم:**\n" + todayPrayersList + "\n";
-    profile += "**تفاصيل مدة الصمود:**\n" + details + "\n\n";
+    profile += "⚡ مضاعف الصمود: " + getMultiplierLabel() + "\n";
+    profile += "🕌 ستريك الصلوات: " + prayerStreak + " يوم متتالي\n";
+    profile += "🛡️ الدروع المتاحة: " + shields + "/3\n";
+    profile += "🏆 إجمالي الانتصارات المسجلة: " + totalVictories + "\n";
+    if (fCount > 0) profile += "🌙 أيام صيام النافلة: " + fCount + " أيام\n";
+    if (isJokerActive && jokerTask) {
+      profile += "\n🃏 *تحدي جوكر نشط:* " + jokerTask + "\n";
+    }
+    profile += "\n📈 التقدم للرتبة التالية:\n" + getNextRankProgress(p) + "\n\n";
+    profile += "*سجل صلوات اليوم:*\n" + todayPrayersList + "\n";
+    profile += "*تفاصيل مدة الصمود:*\n" + details + "\n\n";
     profile += "الأوسمة: " + medals + "\n\n";
     profile += "💬 رسالة القيادة:\n" + msgText;
     
@@ -1125,6 +1134,23 @@ function handleMessage(message) {
     }
   }
   else if (text === "العودة للقتال ⚔️") {
+    var confirmKeys = [
+      [{"text": "نعم، وقعت فعلاً ⚔️"}],
+      [{"text": "تراجع ❌"}]
+    ];
+    var daysNow = getStreakDays();
+    var shieldsNow = parseInt(props.getProperty('SHIELDS') || "0");
+    var warnMsg = "⚠️ *تأكيد الانتكاسة*\n\n";
+    warnMsg += "ستريكك الحالي: *" + daysNow + " يوم*\n";
+    if (shieldsNow > 0) {
+      warnMsg += "🛡️ عندك " + shieldsNow + " درع — الدرع هيمتص الضربة ويحمي الستريك والنقاط.\n";
+    } else {
+      warnMsg += "❌ مفيش دروع — النقاط والستريك هيتصفروا.\n";
+    }
+    warnMsg += "\nمتأكد؟";
+    sendMenuCustom(chatId, warnMsg, confirmKeys);
+  }
+  else if (text === "نعم، وقعت فعلاً ⚔️") {
     var keys = [
       [{"text": "دلوقتي حالا 🔴"}],
       [{"text": "من ساعة 🕐"}, {"text": "من ساعتين 🕑"}],
