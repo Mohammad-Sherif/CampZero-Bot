@@ -8,7 +8,7 @@
 - **🔥 Prayer Streak:** A smart counter that tracks consecutive days of completing all five daily prayers successfully, automatically resetting upon failure.
 - **🛡️ Shield System:** Achieve a "Golden Day" (all 5 prayers on-time) 7 times in a row to earn a protective shield that nullifies relapse penalties (max 3 shields).
 - **🔄 Recovery Mode & Multipliers:** The first 7 days after a relapse grant you 2x points to encourage getting back on track, scaling up to 3x for legendary streaks!
-- **🏅 Ranks and Medals System:** Earn points by completing tasks and praying on time (early prayers grant 15 points, while delays gradually reduce points), and climb the ranks from "Lieutenant" to "Field Marshal".
+- **🎮 Interactive Medals System (Achievements):** 23 unique, beautifully designed military and religious medals to unlock, acting exactly like PlayStation/Xbox achievements with their own custom visual icons, lore, and unlock dates. Show off your collection in the Beast Profile!
 - **🃏 Weekly Joker Challenge:** Random surprise inspections may trigger a Joker challenge, offering massive points and hidden medals.
 - **🌅 Fajr & Friday Bonuses:** Detailed tracking for praying Fajr right on-time to unlock hidden bronze/silver/gold medals, and 2x point multipliers on Fridays.
 - **📉 Wall of Shame:** Accurately track your relapses to understand when and how you fell, helping you avoid repeating the same mistakes.

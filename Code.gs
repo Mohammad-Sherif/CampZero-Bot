@@ -75,13 +75,29 @@ function safeParse(jsonStr, fallback) {
 }
 
 var MEDALS_DB = {
-  "شارة المحارب الأولى 🎖️": { id: "medal_1", name: "شارة المحارب الأولى 🎖️", desc: "تُمنح لأول يوم من الصمود المستمر.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_1.jpg" },
-  "وسام الإرادة الصلبة 🛡️": { id: "medal_2", name: "وسام الإرادة الصلبة 🛡️", desc: "تُمنح لصمود 3 أيام متتالية بقوة.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_2.jpg" },
-  "نجمة الأسبوع النحاسية 🥉": { id: "medal_3", name: "نجمة الأسبوع النحاسية 🥉", desc: "تُمنح لصمود 7 أيام (أسبوع كامل).", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_3.jpg" },
-  "درع الشهر الفضي 🥈": { id: "medal_4", name: "درع الشهر الفضي 🥈", desc: "تُمنح لصمود 30 يوماً متتالية.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_4.jpg" },
-  "تاج الصمود الذهبي 🥇": { id: "medal_5", name: "تاج الصمود الذهبي 🥇", desc: "تُمنح لصمود 90 يوماً (ربع سنة).", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_5.jpg" },
-  "وسام النقاء المطلق 💎": { id: "medal_6", name: "وسام النقاء المطلق 💎", desc: "تُمنح لصمود 180 يوماً (نصف سنة).", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_6.jpg" },
-  "وسام العائد الأقوى 🔥": { id: "medal_7", name: "وسام العائد الأقوى 🔥", desc: "تُمنح بعد التعافي من انتكاسة بضعف مدة الصمود السابقة.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_7.jpg" }
+  "شارة المحارب الأولى 🎖️": { id: "medal1", name: "شارة المحارب الأولى 🎖️", desc: "تُمنح لأول يوم من الصمود المستمر.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_1.jpg" },
+  "وسام الإرادة الصلبة 🛡️": { id: "medal2", name: "وسام الإرادة الصلبة 🛡️", desc: "تُمنح لصمود 3 أيام متتالية بقوة.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_2.jpg" },
+  "نجمة الأسبوع النحاسية 🥉": { id: "medal3", name: "نجمة الأسبوع النحاسية 🥉", desc: "تُمنح لصمود 7 أيام (أسبوع كامل).", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_3.jpg" },
+  "درع الشهر الفضي 🥈": { id: "medal4", name: "درع الشهر الفضي 🥈", desc: "تُمنح لصمود 30 يوماً متتالية.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_4.jpg" },
+  "تاج الصمود الذهبي 🥇": { id: "medal5", name: "تاج الصمود الذهبي 🥇", desc: "تُمنح لصمود 90 يوماً (ربع سنة).", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_5.jpg" },
+  "وسام النقاء المطلق 💎": { id: "medal6", name: "وسام النقاء المطلق 💎", desc: "تُمنح لصمود 180 يوماً (نصف سنة).", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_6.jpg" },
+  "🔥 وسام العائد الأقوى": { id: "medal7", name: "🔥 وسام العائد الأقوى", desc: "تُمنح بعد التعافي من انتكاسة بضعف مدة الصمود السابقة.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_7.jpg" },
+  "وسام الالتزام الحديدي 🕌": { id: "medal8", name: "وسام الالتزام الحديدي 🕌", desc: "تُمنح لصلاة 3 أيام متتالية في وقتها.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_8.jpg" },
+  "نجمة الفجر 🌟": { id: "medal9", name: "نجمة الفجر 🌟", desc: "تُمنح لصلاة 7 أيام متتالية في وقتها.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_9.jpg" },
+  "درع المصلين الأسطوري 🕋": { id: "medal10", name: "درع المصلين الأسطوري 🕋", desc: "تُمنح لصلاة 30 يوماً متتالية في وقتها.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_10.jpg" },
+  "🖐️ الضربة الخماسية": { id: "medal11", name: "🖐️ الضربة الخماسية", desc: "تُمنح لأداء الصلوات الخمس في وقتها بامتياز.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_11.jpg" },
+  "💰 مليونير الحسنات": { id: "medal12", name: "💰 مليونير الحسنات", desc: "تُمنح لجمع كمية ضخمة من النقاط والحسنات.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_12.jpg" },
+  "🎖️ وسام العملية الأسبوعية": { id: "medal13", name: "🎖️ وسام العملية الأسبوعية", desc: "تُمنح لإتمام المهام والعمليات الأسبوعية بنجاح.", img: "https://raw.githubusercontent.com/Mohammad-Sherif/CampZero-Bot/main/assets/medals/medal_13.jpg" },
+  "شارة المقاوم الصامت ⚔️": { id: "medal14", name: "شارة المقاوم الصامت ⚔️", desc: "تُمنح لتسجيل 10 انتصارات على النفس." },
+  "قلادة المنتصر الأكبر 🏆": { id: "medal15", name: "قلادة المنتصر الأكبر 🏆", desc: "تُمنح لتسجيل 50 انتصاراً عظيماً." },
+  "🥉 حارس الفجر البرونزي": { id: "medal16", name: "🥉 حارس الفجر البرونزي", desc: "تُمنح لصلاة الفجر في وقتها 3 مرات." },
+  "🥈 حارس الفجر الفضي": { id: "medal17", name: "🥈 حارس الفجر الفضي", desc: "تُمنح لصلاة الفجر في وقتها 10 مرات." },
+  "🥇 حارس الفجر الذهبي": { id: "medal18", name: "🥇 حارس الفجر الذهبي", desc: "تُمنح لصلاة الفجر في وقتها 30 مرة." },
+  "🌌 أسطورة الفجر": { id: "medal19", name: "🌌 أسطورة الفجر", desc: "تُمنح لصلاة الفجر في وقتها 90 مرة." },
+  "🃏 وسام الجوكر النادر": { id: "medal20", name: "🃏 وسام الجوكر النادر", desc: "تُمنح عند اقتناص الجوكر وإتمام تحدياته النادرة." },
+  "🌍 وسام السنة الأسطورية": { id: "medal21", name: "🌍 وسام السنة الأسطورية", desc: "تُمنح لصمود عام كامل (365 يوماً)! أسطورة حية." },
+  "🛡️ الدرع الفولاذي": { id: "medal22", name: "🛡️ الدرع الفولاذي", desc: "تُمنح كدرع حماية فولاذي." },
+  "⚔️ سيف الحق": { id: "medal23", name: "⚔️ سيف الحق", desc: "تُمنح كرمز لقوة الإيمان." }
 };
 
 function getMedals() {
@@ -151,12 +167,25 @@ function setupBot() {
 
 function doPost(e) {
   var props = PropertiesService.getScriptProperties();
-  props.setProperty('LAST_INTERACTION_TIME', new Date().getTime().toString());
-  
-  if (typeof e !== 'undefined') {
-    var update = JSON.parse(e.postData.contents);
-    if (update.message) {
-      handleMessage(update.message);
+  try {
+    props.setProperty('LAST_INTERACTION_TIME', new Date().getTime().toString());
+    
+    if (typeof e !== 'undefined') {
+      var update = JSON.parse(e.postData.contents);
+      if (update.message) {
+        handleMessage(update.message);
+      }
+    }
+  } catch (err) {
+    if (typeof e !== 'undefined') {
+      try {
+        var update = JSON.parse(e.postData.contents);
+        var chatId = update.message.chat.id;
+        var url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage";
+        var payload = { "chat_id": chatId, "text": "حدث خطأ برمجي (Crash):\n" + err.message };
+        var options = { "method": "post", "contentType": "application/json", "payload": JSON.stringify(payload), "muteHttpExceptions": true };
+        UrlFetchApp.fetch(url, options);
+      } catch (innerErr) { }
     }
   }
   return HtmlService.createHtmlOutput("OK");
@@ -337,7 +366,7 @@ function checkHiddenAchievements(props, chatId, p) {
 // Main Logic
 // ---------------------------
 function handleMessage(message) {
-  var text = message.text;
+  var text = message.text || "";
   var chatId = message.chat.id;
   var props = PropertiesService.getScriptProperties();
   
@@ -902,7 +931,7 @@ function handleMessage(message) {
       sendMenu(chatId, "القائمة الرئيسية 👇", getKeyboard(getPoints()));
     }
   }
-  else if (text.startsWith("/medal_")) {
+  else if (text.startsWith("/medal")) {
     var medalId = text.trim().substring(1); 
     var foundData = null;
     for (var key in MEDALS_DB) {
@@ -930,19 +959,23 @@ function handleMessage(message) {
         }
       }
       
-      var mText = "🏆 **" + foundData.name + "**\n\n";
-      mText += "📝 **الوصف:** " + foundData.desc + "\n";
+      var mText = "🏆 *" + foundData.name + "*\n\n";
+      mText += "📝 *الوصف:* " + foundData.desc + "\n";
       if (hasMedal) {
-        mText += "✅ **الحالة:** تم الحصول عليه\n";
-        mText += "📅 **تاريخ الحصول عليه:** " + earnedDate;
+        mText += "✅ *الحالة:* تم الحصول عليه\n";
+        mText += "📅 *تاريخ الحصول عليه:* " + earnedDate;
       } else {
-        mText += "❌ **الحالة:** لم يتم الحصول عليه بعد.";
+        mText += "❌ *الحالة:* لم يتم الحصول عليه بعد.";
       }
       
-      var url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto";
-      var payload = { "chat_id": chatId, "photo": foundData.img, "caption": mText, "parse_mode": "Markdown" };
-      var options = { "method": "post", "contentType": "application/json", "payload": JSON.stringify(payload) };
-      UrlFetchApp.fetch(url, options);
+      if (foundData.img) {
+        var url = "https://api.telegram.org/bot" + BOT_TOKEN + "/sendPhoto";
+        var payload = { "chat_id": chatId, "photo": foundData.img, "caption": mText, "parse_mode": "Markdown" };
+        var options = { "method": "post", "contentType": "application/json", "payload": JSON.stringify(payload), "muteHttpExceptions": true };
+        try { UrlFetchApp.fetch(url, options); } catch (e) { Logger.log(e); }
+      } else {
+        sendMessage(chatId, mText);
+      }
     }
   }
 
@@ -1757,4 +1790,3 @@ function checkAndRemind() {
     lock.releaseLock();
   }
 }
-
