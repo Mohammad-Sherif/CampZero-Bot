@@ -1179,6 +1179,10 @@ function handleMessage(message) {
     }
     
     var personalBest = parseInt(props.getProperty('PERSONAL_BEST_STREAK') || "0");
+    if (days > personalBest) {
+      personalBest = days;
+      props.setProperty('PERSONAL_BEST_STREAK', days.toString());
+    }
     var pbText = "";
     if (personalBest > 0) {
       var pct = Math.floor((days / personalBest) * 100);
