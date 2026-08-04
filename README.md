@@ -10,6 +10,7 @@
 - **🔄 Recovery Mode & Multipliers:** The first 7 days after a relapse grant you 2x points to encourage getting back on track, scaling up to 3x for legendary streaks!
 - **🎮 Interactive Medals System (Achievements):** 23 unique, beautifully designed military and religious medals to unlock, acting exactly like PlayStation/Xbox achievements with their own custom visual icons, lore, and unlock dates. Show off your collection in the Beast Profile!
 - **🃏 Weekly Joker Challenge:** Random surprise inspections may trigger a Joker challenge, offering massive points and hidden medals.
+- **🏁 40-Day Campaign:** Opt into a focused 40-day resilience campaign, track its progress from your profile, and earn a dedicated medal and 600-point reward on completion.
 - **🌅 Fajr & Friday Bonuses:** Detailed tracking for praying Fajr right on-time to unlock hidden bronze/silver/gold medals, and 2x point multipliers on Fridays.
 - **📉 Wall of Shame:** Accurately track your relapses to understand when and how you fell, helping you avoid repeating the same mistakes.
 - **🏆 Victory Vault:** Log your small moral victories daily (max 3 rewards per day) and draw energy from them during moments of weakness.
@@ -19,13 +20,16 @@
 - **📅 Weekly Operations & Special Missions:** Random religious tasks (e.g., reading a specific Surah, fasting, memorizing verses) with massive rewards to break the routine.
 - **📊 Detailed Analytics (`/mystats`):** Tracks on-time vs Qadaa prayers, longest streak, total victories and falls.
 - **📅 Weekly Summaries:** Automated performance reviews delivered every Friday.
+- **📈 Compete With Yourself:** Weekly reviews compare your current prayer performance with the previous week, so progress is always visible.
 - **🌅 Morning Inspiration:** A daily verse or hadith delivered 15 minutes after Fajr.
+- **💾 Safe Backup & Restore:** Save the current property state to a dedicated `Backup` sheet and restore it later; operational logs are kept separately in `Logs`.
 - **🔒 Single-User Security:** Locks the bot to the first person who uses it, ignoring all other users.
 
 ## ⚠️ Security Notice
 This bot is designed to be a personal accountability system.
 - **Single User Constraint:** The bot will automatically lock to the first user who sends a message and set them as the `ADMIN_CHAT_ID`. It will ignore all messages from other users.
 - **Keep your Token Safe:** Never share your `BOT_TOKEN`. Ensure that when deploying, you do not push your personal tokens to public repositories. If your token gets compromised, go to BotFather and revoke it immediately.
+- **Mirror File:** `Code.gs` is the publishable, token-free mirror. Keep personal credentials only in your private Apps Script project or local `MyCode.gs`.
 
 ## 🚀 Deployment Guide
 
