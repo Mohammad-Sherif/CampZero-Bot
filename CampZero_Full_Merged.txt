@@ -1432,6 +1432,12 @@ function handleMessage(message) {
     
     var dynamicEmoji = "⚔️";
     if (days >= 30) dynamicEmoji = "👑";
+
+    var profile = "📋 **الملف العسكري — Camp Zero**\n━━━━━━━━━━━━━━━\n";
+    profile += "🎖️ الرتبة: " + rank + "\n";
+    profile += "💎 النقاط: " + p + " نقطة\n";
+    profile += dynamicEmoji + " أيام الصمود: " + days + " يوم\n";
+
     profile += pbText;
     profile += "⚡ مضاعف الصمود: " + getMultiplierLabel() + "\n";
     profile += "🕌 ستريك الصلوات: " + prayerStreak + " يوم متتالي\n";
